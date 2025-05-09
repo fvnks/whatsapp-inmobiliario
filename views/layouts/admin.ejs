@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Bot de WhatsApp para Propiedades</title>
+  <!-- Tabler UI Core CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+  <!-- Custom CSS -->
+  <style>
+    :root {
+      --whatsapp-primary: #25d366;
+      --whatsapp-dark: #075e54;
+      --whatsapp-light: #dcf8c6;
+    }
+    .navbar-brand-image {
+      height: 2rem;
+    }
+    .whatsapp-primary {
+      color: var(--whatsapp-primary) !important;
+    }
+    .whatsapp-bg {
+      background-color: var(--whatsapp-dark) !important;
+    }
+    .btn-whatsapp {
+      background-color: var(--whatsapp-primary);
+      color: #fff;
+      border-color: var(--whatsapp-primary);
+    }
+    .btn-whatsapp:hover {
+      background-color: #1fa855;
+      color: #fff;
+      border-color: #1fa855;
+    }
+    .nav-link.active {
+      border-left: 3px solid var(--whatsapp-primary);
+      background-color: rgba(37, 211, 102, 0.1);
+    }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      display: none;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--whatsapp-primary);
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <%- style %>
+</head>
+<body class="antialiased">
+  <!-- Overlay de carga -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="page">
+    <!-- Sidebar / Navbar lateral -->
+    <aside class="navbar navbar-vertical navbar-expand-lg navbar-dark whatsapp-bg">
+      <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <h1 class="navbar-brand navbar-brand-autodark">
+          <a href="/admin">
+            <i class="ti ti-brand-whatsapp me-2"></i>
+            <span class="d-none d-lg-inline">WhatsApp Bot</span>
+          </a>
+        </h1>
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+          <ul class="navbar-nav pt-lg-3">
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin' ? 'active' : '' %>" href="/admin">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-dashboard"></i>
+                </span>
+                <span class="nav-link-title">Dashboard</span>
+              </a>
+            </li>
+            <% if (user && user.permissions && user.permissions.includes('manage_users')) { %>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/users' ? 'active' : '' %>" href="/admin/users">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-users"></i>
+                </span>
+                <span class="nav-link-title">Usuarios</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/whatsapp-users' ? 'active' : '' %>" href="/admin/whatsapp-users">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-brand-whatsapp"></i>
+                </span>
+                <span class="nav-link-title">Usuarios WhatsApp</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/whatsapp-roles' ? 'active' : '' %>" href="/admin/whatsapp-roles">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-user-shield"></i>
+                </span>
+                <span class="nav-link-title">Roles WhatsApp</span>
+              </a>
+            </li>
+            <% } %>
+            <% if (user && user.permissions && user.permissions.includes('manage_sheets')) { %>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/sheets' ? 'active' : '' %>" href="/admin/sheets">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-table"></i>
+                </span>
+                <span class="nav-link-title">Google Sheets</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/googlesheets' ? 'active' : '' %>" href="/admin/googlesheets">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-api"></i>
+                </span>
+                <span class="nav-link-title">Google Sheets API</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/sheet-explorer' ? 'active' : '' %>" href="/admin/sheet-explorer">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-search"></i>
+                </span>
+                <span class="nav-link-title">Explorador de Datos</span>
+              </a>
+            </li>
+            <% } %>
+            <% if (user && user.permissions && user.permissions.includes('view_queries')) { %>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/queries' ? 'active' : '' %>" href="/admin/queries">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-messages"></i>
+                </span>
+                <span class="nav-link-title">Consultas</span>
+              </a>
+            </li>
+            <% } %>
+            <li class="nav-item">
+              <a class="nav-link <%= path === '/admin/profile' ? 'active' : '' %>" href="/admin/profile">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-user-circle"></i>
+                </span>
+                <span class="nav-link-title">Mi Perfil</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="javascript:void(0)" id="logoutButton">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-logout"></i>
+                </span>
+                <span class="nav-link-title">Cerrar Sesión</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <div class="page-wrapper">
+      <!-- Topbar / Header -->
+      <header class="navbar navbar-expand-md navbar-light d-print-none">
+        <div class="container-xl">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="navbar-nav flex-row order-md-last">
+            <div class="nav-item dropdown">
+              <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                <div class="d-none d-xl-block ps-2">
+                  <div><%= user.username %></div>
+                  <div class="mt-1 small text-muted">Administrador</div>
+                </div>
+                <span class="avatar avatar-sm ms-2" style="background-color: var(--whatsapp-dark)">
+                  <i class="ti ti-user"></i>
+                </span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <a href="/admin/profile" class="dropdown-item">
+                  <i class="ti ti-user me-2"></i>Mi Perfil
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" id="logoutBtn" class="dropdown-item">
+                  <i class="ti ti-logout me-2"></i>Cerrar Sesión
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="collapse navbar-collapse" id="navbar-menu">
+            <div>
+              <form action="." method="get">
+                <div class="input-icon">
+                  <span class="input-icon-addon">
+                    <i class="ti ti-search"></i>
+                  </span>
+                  <input type="text" class="form-control" placeholder="Buscar..." aria-label="Buscar en el sistema">
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Toast container for notifications -->
+      <div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+      <!-- Contenido principal -->
+      <div class="page-body">
+        <div class="container-xl">
+          <%- body %>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer footer-transparent d-print-none">
+        <div class="container-xl">
+          <div class="row text-center align-items-center flex-row-reverse">
+            <div class="col-lg-auto ms-lg-auto">
+              <ul class="list-inline list-inline-dots mb-0">
+                <li class="list-inline-item">
+                  <a href="javascript:void(0)" class="link-secondary">Documentación</a>
+                </li>
+                <li class="list-inline-item">
+                  <a href="javascript:void(0)" class="link-secondary">Ayuda</a>
+                </li>
+              </ul>
+            </div>
+            <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+              <ul class="list-inline list-inline-dots mb-0">
+                <li class="list-inline-item">
+                  Copyright &copy; <%= new Date().getFullYear() %> WhatsApp Property Bot
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Tabler Core JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <!-- Scripts personalizados -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Función de cierre de sesión
+      const logoutFunction = function() {
+        // Mostrar confirmación
+        Swal.fire({
+          title: '¿Cerrar sesión?',
+          text: '¿Estás seguro que deseas cerrar sesión?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Sí, cerrar sesión',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Limpiar localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            
+            // Redireccionar a logout
+            window.location.href = '/logout';
+          }
+        });
+      };
+      
+      // Botones de logout
+      document.getElementById('logoutButton').addEventListener('click', logoutFunction);
+      document.getElementById('logoutBtn').addEventListener('click', logoutFunction);
+      
+      // Inicializar DataTables (si las hay en la página)
+      if ($.fn.DataTable && document.querySelector('.datatable')) {
+        $('.datatable').DataTable({
+          language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+          },
+          responsive: true
+        });
+      }
+      
+      // Función para mostrar/ocultar el overlay de carga
+      window.showLoading = function() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+      };
+      
+      window.hideLoading = function() {
+        document.getElementById('loadingOverlay').style.display = 'none';
+      };
+      
+      // Verificar la autenticación
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/';
+      } else {
+        // Verificar si el token es válido
+        fetch('/api/auth/verify', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Token inválido');
+          }
+          return response.json();
+        })
+        .catch(error => {
+          console.error('Error verificando token:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/';
+        });
+      }
+    });
+  </script>
+  
+  <!-- Scripts adicionales específicos de la página -->
+  <%- script %>
+</body>
+</html> 

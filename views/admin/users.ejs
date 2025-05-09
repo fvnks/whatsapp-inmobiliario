@@ -1,0 +1,488 @@
+<div class="container-fluid">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Gestión de Usuarios</h2>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
+      <i class="fas fa-user-plus"></i> Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Tabla de Usuarios -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="usersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Email</th>
+              <th>Nombre</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Último acceso</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <!-- La tabla se llenará con JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Agregar Usuario -->
+  <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Nuevo Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addUserForm">
+            <div class="mb-3">
+              <label for="username" class="form-label">Nombre de usuario</label>
+              <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="mb-3">
+              <label for="fullName" class="form-label">Nombre completo</label>
+              <input type="text" class="form-control" id="fullName" name="fullName" required>
+            </div>
+            <div class="mb-3">
+              <label for="roleId" class="form-label">Rol</label>
+              <select class="form-select" id="roleId" name="roleId" required>
+                <!-- Los roles se cargarán dinámicamente -->
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success" id="saveUserBtn">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Editar Usuario -->
+  <div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editUserForm">
+            <input type="hidden" id="editUserId">
+            <div class="mb-3">
+              <label for="editUsername" class="form-label">Nombre de usuario</label>
+              <input type="text" class="form-control" id="editUsername" name="username" required>
+            </div>
+            <div class="mb-3">
+              <label for="editEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="editEmail" name="email" required>
+            </div>
+            <div class="mb-3">
+              <label for="editPassword" class="form-label">Contraseña (dejar en blanco para mantener)</label>
+              <input type="password" class="form-control" id="editPassword" name="password">
+            </div>
+            <div class="mb-3">
+              <label for="editFullName" class="form-label">Nombre completo</label>
+              <input type="text" class="form-control" id="editFullName" name="fullName" required>
+            </div>
+            <div class="mb-3">
+              <label for="editRoleId" class="form-label">Rol</label>
+              <select class="form-select" id="editRoleId" name="roleId" required>
+                <!-- Los roles se cargarán dinámicamente -->
+              </select>
+            </div>
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="editIsActive" checked>
+                <label class="form-check-label" for="editIsActive">Usuario activo</label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="updateUserBtn">Actualizar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación para Eliminar -->
+  <div class="modal fade" id="deleteUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar Eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar al usuario <span id="deleteUserName" class="fw-bold"></span>?</p>
+          <p class="text-danger">Esta acción no se puede deshacer.</p>
+          <input type="hidden" id="deleteUserId">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteUserBtn">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-5 mb-3 text-center text-muted">
+    <p>&copy; <%= new Date().getFullYear() %> WhatsApp Property Bot</p>
+  </footer>
+</div>
+
+<!-- Scripts específicos de la página -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // DataTable para la tabla de usuarios
+    let usersTable = new DataTable('#usersTable', {
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+      },
+      columns: [
+        { data: 'id' },
+        { data: 'username' },
+        { data: 'email' },
+        { data: 'full_name' },
+        { data: 'role_name' },
+        { data: 'is_active' },
+        { data: 'last_login' },
+        { data: 'actions', orderable: false, searchable: false }
+      ]
+    });
+
+    // Cargar usuarios
+    loadUsers();
+    
+    // Cargar roles para los selects
+    loadRoles();
+
+    // Evento para guardar nuevo usuario
+    document.getElementById('saveUserBtn').addEventListener('click', saveUser);
+
+    // Evento para actualizar usuario
+    document.getElementById('updateUserBtn').addEventListener('click', updateUser);
+
+    // Evento para confirmar eliminación
+    document.getElementById('confirmDeleteUserBtn').addEventListener('click', deleteUser);
+
+    // Función para cargar usuarios
+    async function loadUsers() {
+      try {
+        const response = await fetch('/api/users', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar usuarios');
+        }
+        
+        const data = await response.json();
+        
+        // Limpiar y llenar la tabla
+        usersTable.clear();
+        
+        data.forEach(user => {
+          usersTable.row.add({
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            full_name: user.full_name || '-',
+            role_name: user.role_name,
+            is_active: user.is_active ? 
+              '<span class="badge bg-success">Activo</span>' : 
+              '<span class="badge bg-danger">Inactivo</span>',
+            last_login: user.last_login ? 
+              new Date(user.last_login).toLocaleString('es-ES') : 
+              'Nunca',
+            actions: `
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-primary btn-edit" data-id="${user.id}">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger btn-delete" data-id="${user.id}" data-name="${user.username}">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            `
+          });
+        });
+        
+        usersTable.draw();
+        
+        // Agregar eventos a los botones de acciones
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const userId = e.currentTarget.getAttribute('data-id');
+            editUser(userId);
+          });
+        });
+        
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const userId = e.currentTarget.getAttribute('data-id');
+            const userName = e.currentTarget.getAttribute('data-name');
+            document.getElementById('deleteUserId').value = userId;
+            document.getElementById('deleteUserName').textContent = userName;
+            new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+          });
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al cargar usuarios', 'danger');
+      }
+    }
+
+    // Función para cargar roles
+    async function loadRoles() {
+      try {
+        const response = await fetch('/api/users/roles', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar roles');
+        }
+        
+        const roles = await response.json();
+        
+        // Llenar selects de roles
+        const roleSelects = ['roleId', 'editRoleId'];
+        
+        roleSelects.forEach(selectId => {
+          const select = document.getElementById(selectId);
+          select.innerHTML = '';
+          
+          roles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role.id;
+            option.textContent = role.name;
+            select.appendChild(option);
+          });
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al cargar roles', 'danger');
+      }
+    }
+
+    // Función para guardar nuevo usuario
+    async function saveUser() {
+      try {
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const fullName = document.getElementById('fullName').value.trim();
+        const roleId = document.getElementById('roleId').value;
+        
+        if (!username || !email || !password || !fullName || !roleId) {
+          showToast('Por favor completa todos los campos', 'warning');
+          return;
+        }
+        
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            username,
+            email,
+            password,
+            fullName,
+            roleId: parseInt(roleId)
+          })
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error?.message || 'Error al crear usuario');
+        }
+        
+        // Cerrar modal y limpiar formulario
+        bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+        document.getElementById('addUserForm').reset();
+        
+        // Recargar tabla de usuarios
+        loadUsers();
+        
+        showToast('Usuario creado exitosamente', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast(error.message, 'danger');
+      }
+    }
+
+    // Función para editar usuario
+    async function editUser(userId) {
+      try {
+        const response = await fetch(`/api/users/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar datos del usuario');
+        }
+        
+        const user = await response.json();
+        
+        // Llenar formulario de edición
+        document.getElementById('editUserId').value = user.id;
+        document.getElementById('editUsername').value = user.username;
+        document.getElementById('editEmail').value = user.email;
+        document.getElementById('editPassword').value = '';
+        document.getElementById('editFullName').value = user.full_name || '';
+        document.getElementById('editRoleId').value = user.role_id;
+        document.getElementById('editIsActive').checked = user.is_active;
+        
+        // Mostrar modal
+        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al cargar usuario', 'danger');
+      }
+    }
+
+    // Función para actualizar usuario
+    async function updateUser() {
+      try {
+        const userId = document.getElementById('editUserId').value;
+        const username = document.getElementById('editUsername').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
+        const password = document.getElementById('editPassword').value.trim();
+        const fullName = document.getElementById('editFullName').value.trim();
+        const roleId = document.getElementById('editRoleId').value;
+        const isActive = document.getElementById('editIsActive').checked;
+        
+        if (!username || !email || !fullName || !roleId) {
+          showToast('Por favor completa los campos requeridos', 'warning');
+          return;
+        }
+        
+        const userData = {
+          username,
+          email,
+          fullName,
+          roleId: parseInt(roleId),
+          isActive
+        };
+        
+        // Solo incluir contraseña si se proporcionó una nueva
+        if (password) {
+          userData.password = password;
+        }
+        
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(userData)
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error?.message || 'Error al actualizar usuario');
+        }
+        
+        // Cerrar modal
+        bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+        
+        // Recargar tabla de usuarios
+        loadUsers();
+        
+        showToast('Usuario actualizado exitosamente', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast(error.message, 'danger');
+      }
+    }
+
+    // Función para eliminar usuario
+    async function deleteUser() {
+      try {
+        const userId = document.getElementById('deleteUserId').value;
+        
+        const response = await fetch(`/api/users/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al eliminar usuario');
+        }
+        
+        // Cerrar modal
+        bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
+        
+        // Recargar tabla de usuarios
+        loadUsers();
+        
+        showToast('Usuario eliminado exitosamente', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al eliminar usuario', 'danger');
+      }
+    }
+
+    // Función para mostrar toast
+    function showToast(message, type) {
+      const toastContainer = document.querySelector('.toast-container');
+      
+      const toastElement = document.createElement('div');
+      toastElement.className = `toast bg-${type} text-white`;
+      toastElement.setAttribute('role', 'alert');
+      toastElement.setAttribute('aria-live', 'assertive');
+      toastElement.setAttribute('aria-atomic', 'true');
+      
+      toastElement.innerHTML = `
+        <div class="toast-header bg-${type} text-white">
+          <strong class="me-auto">Notificación</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          ${message}
+        </div>
+      `;
+      
+      toastContainer.appendChild(toastElement);
+      
+      const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+      toast.show();
+      
+      // Eliminar toast del DOM después de ocultarse
+      toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+      });
+    }
+  });
+</script> 

@@ -1,0 +1,509 @@
+<!-- Page header -->
+<div class="page-header d-print-none">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <h2 class="page-title">
+          Dashboard
+        </h2>
+      </div>
+      <div class="col-auto ms-auto d-print-none">
+        <div class="btn-list">
+          <a href="#" id="refreshDashboard" class="btn btn-primary d-none d-sm-inline-block">
+            <i class="ti ti-refresh me-1"></i>
+            Actualizar
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page body -->
+<div class="page-body">
+  <div class="container-xl">
+    <!-- Tarjetas de estadísticas -->
+    <div class="row row-deck row-cards">
+      <div class="col-sm-6 col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="subheader">Usuarios</div>
+              <div class="ms-auto lh-1">
+                <a href="/admin/users" class="text-primary text-decoration-none">
+                  <i class="ti ti-arrow-right"></i> Ver
+                </a>
+              </div>
+            </div>
+            <div class="h1 mb-3" id="userCount"><%= stats.users %></div>
+            <div class="d-flex mb-2">
+              <div class="avatar bg-primary-lt">
+                <i class="ti ti-users"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="subheader">Google Sheets</div>
+              <div class="ms-auto lh-1">
+                <a href="/admin/sheets" class="text-primary text-decoration-none">
+                  <i class="ti ti-arrow-right"></i> Ver
+                </a>
+              </div>
+            </div>
+            <div class="h1 mb-3" id="sheetCount"><%= stats.sheets %></div>
+            <div class="d-flex mb-2">
+              <div class="avatar bg-green-lt">
+                <i class="ti ti-table"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="subheader">Consultas Totales</div>
+              <div class="ms-auto lh-1">
+                <a href="/admin/queries" class="text-primary text-decoration-none">
+                  <i class="ti ti-arrow-right"></i> Ver
+                </a>
+              </div>
+            </div>
+            <div class="h1 mb-3" id="queryCount"><%= stats.queries %></div>
+            <div class="d-flex mb-2">
+              <div class="avatar bg-azure-lt">
+                <i class="ti ti-messages"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="subheader">Consultas Pendientes</div>
+              <div class="ms-auto lh-1">
+                <a href="/admin/queries?status=pending" class="text-primary text-decoration-none">
+                  <i class="ti ti-arrow-right"></i> Ver
+                </a>
+              </div>
+            </div>
+            <div class="h1 mb-3" id="pendingCount"><%= stats.pendingQueries %></div>
+            <div class="d-flex mb-2">
+              <div class="avatar bg-yellow-lt">
+                <i class="ti ti-clock"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado del Bot de WhatsApp y actividad reciente -->
+    <div class="row mt-4">
+      <div class="col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="ti ti-brand-whatsapp text-green me-2"></i>
+              Estado del Bot de WhatsApp
+            </h3>
+            <div class="card-actions">
+              <a href="#" id="refreshBotStatus" class="btn btn-icon">
+                <i class="ti ti-refresh"></i>
+              </a>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Estado del bot -->
+            <div class="d-flex align-items-center mb-3 p-3 rounded bg-light">
+              <div id="botStatusIndicator" class="status-indicator me-3">
+                <span class="avatar bg-danger">
+                  <i class="ti ti-circle"></i>
+                </span>
+              </div>
+              <div class="flex-grow-1">
+                <div id="botStatusText" class="fw-bold">Desconectado</div>
+                <div class="text-muted small" id="botLastSeen">Estado actualizado: justo ahora</div>
+              </div>
+              <div class="d-flex align-items-center" id="whatsappToggle">
+                <label class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="botEnableSwitch">
+                  <span id="botEnableText" class="form-check-label">Desactivado</span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="alert alert-info d-flex" role="alert">
+              <i class="ti ti-info-circle me-2"></i>
+              <div>
+                Para activar o desactivar el bot, utiliza el interruptor. Si el bot está activo, deberás escanear el código QR para autenticarte.
+              </div>
+            </div>
+            
+            <!-- Área del código QR -->
+            <div class="text-center p-3 d-none" id="qrCodeContainer">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="mb-3">Escanea este código con WhatsApp</h6>
+                  <div id="qrCode" class="d-inline-block p-3 border rounded bg-white shadow-sm"></div>
+                  <p class="text-muted mt-3 small">
+                    <i class="ti ti-info-circle me-1"></i>
+                    Abre WhatsApp en tu teléfono > Menú > WhatsApp Web > Escanea el código
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-3">
+              <button class="btn btn-primary w-100" id="reconnectBot">
+                <i class="ti ti-refresh me-2"></i> Reconectar Bot
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="ti ti-history text-blue me-2"></i>
+              Actividad Reciente
+            </h3>
+            <div class="card-actions">
+              <a href="/admin/queries" class="btn btn-icon">
+                <i class="ti ti-external-link"></i>
+              </a>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="list-group list-group-flush" id="recentQueriesContainer">
+              <% if (recentQueries && recentQueries.length > 0) { %>
+                <% recentQueries.slice(0, 5).forEach(query => { %>
+                  <div class="list-group-item">
+                    <div class="row align-items-center">
+                      <div class="col-auto">
+                        <span class="avatar bg-blue-lt">
+                          <i class="ti ti-message"></i>
+                        </span>
+                      </div>
+                      <div class="col">
+                        <div class="d-flex align-items-center">
+                          <div class="text-truncate" style="max-width: 250px;" title="<%= query.query_text %>">
+                            <%= query.query_text %>
+                          </div>
+                          <small class="text-muted ms-auto">
+                            <%= new Date(query.created_at).toLocaleTimeString('es-ES') %>
+                          </small>
+                        </div>
+                        <div class="d-flex align-items-center mt-1">
+                          <small class="text-muted">
+                            <i class="ti ti-phone me-1"></i> <%= query.phone_number %>
+                          </small>
+                          <div class="ms-auto">
+                            <% if (query.status === 'pending') { %>
+                              <span class="badge bg-yellow">Pendiente</span>
+                            <% } else if (query.status === 'processed') { %>
+                              <span class="badge bg-green">Procesada</span>
+                            <% } else { %>
+                              <span class="badge bg-red">Fallida</span>
+                            <% } %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="text-center py-4">
+                  <i class="ti ti-inbox fs-1 text-muted mb-2"></i>
+                  <p>No hay consultas recientes</p>
+                </div>
+              <% } %>
+            </div>
+          </div>
+          <div class="card-footer text-center">
+            <a href="/admin/queries" class="btn btn-outline-primary">
+              Ver todas las consultas
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accesos rápidos -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="ti ti-bolt text-yellow me-2"></i>
+              Accesos Rápidos
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-3 col-sm-6">
+                <a href="/admin/users" class="card card-link card-link-pop">
+                  <div class="card-body text-center">
+                    <span class="avatar avatar-md bg-primary mb-3 mx-auto">
+                      <i class="ti ti-user-plus"></i>
+                    </span>
+                    <h3 class="card-title mb-1">Gestión de Usuarios</h3>
+                    <p class="text-muted">Crea y gestiona usuarios del sistema</p>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <a href="/admin/sheets" class="card card-link card-link-pop">
+                  <div class="card-body text-center">
+                    <span class="avatar avatar-md bg-green mb-3 mx-auto">
+                      <i class="ti ti-table"></i>
+                    </span>
+                    <h3 class="card-title mb-1">Google Sheets</h3>
+                    <p class="text-muted">Administra las conexiones de datos</p>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <a href="/admin/sheet-explorer" class="card card-link card-link-pop">
+                  <div class="card-body text-center">
+                    <span class="avatar avatar-md bg-azure mb-3 mx-auto">
+                      <i class="ti ti-search"></i>
+                    </span>
+                    <h3 class="card-title mb-1">Explorador de Datos</h3>
+                    <p class="text-muted">Visualiza y filtra los datos de las hojas</p>
+                  </div>
+                </a>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <a href="/admin/queries" class="card card-link card-link-pop">
+                  <div class="card-body text-center">
+                    <span class="avatar avatar-md bg-purple mb-3 mx-auto">
+                      <i class="ti ti-messages"></i>
+                    </span>
+                    <h3 class="card-title mb-1">Consultas</h3>
+                    <p class="text-muted">Historial de mensajes y consultas</p>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script para la lógica del dashboard -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Referencias a elementos
+    const reconnectBot = document.getElementById('reconnectBot');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const botStatusText = document.getElementById('botStatusText');
+    const botLastSeen = document.getElementById('botLastSeen');
+    const botStatusIndicator = document.getElementById('botStatusIndicator').querySelector('i');
+    const botEnableSwitch = document.getElementById('botEnableSwitch');
+    const botEnableText = document.getElementById('botEnableText');
+    const refreshBotStatus = document.getElementById('refreshBotStatus');
+    const refreshDashboard = document.getElementById('refreshDashboard');
+    
+    // Verificar el estado actual del bot
+    checkBotStatus();
+    
+    // Función para actualizar el estado del bot en la interfaz
+    function updateBotStatusUI(isActive) {
+      if (isActive) {
+        botStatusText.textContent = 'Conectado';
+        botStatusText.classList.remove('text-danger');
+        botStatusText.classList.add('text-success');
+        botStatusIndicator.classList.remove('text-danger');
+        botStatusIndicator.classList.add('text-success');
+        botEnableSwitch.checked = true;
+        botEnableText.textContent = 'Activado';
+      } else {
+        botStatusText.textContent = 'Desconectado';
+        botStatusText.classList.remove('text-success');
+        botStatusText.classList.add('text-danger');
+        botStatusIndicator.classList.remove('text-success');
+        botStatusIndicator.classList.add('text-danger');
+        botEnableSwitch.checked = false;
+        botEnableText.textContent = 'Desactivado';
+      }
+      
+      botLastSeen.textContent = `Estado actualizado: ${new Date().toLocaleTimeString('es-ES')}`;
+    }
+    
+    // Función para verificar el estado del bot
+    function checkBotStatus() {
+      showLoading();
+      
+      fetch('/api/public/status')
+        .then(response => response.json())
+        .then(data => {
+          hideLoading();
+          updateBotStatusUI(data.whatsapp_status === 'active');
+        })
+        .catch(error => {
+          console.error('Error al verificar estado del bot:', error);
+          hideLoading();
+          updateBotStatusUI(false);
+        });
+    }
+    
+    // Evento para activar/desactivar el bot
+    botEnableSwitch.addEventListener('change', function() {
+      const isActive = this.checked;
+      
+      showLoading();
+      
+      // Esta sería una llamada real a la API para activar/desactivar el bot
+      fetch('/api/admin/whatsapp/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ enable: isActive })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al cambiar estado del bot');
+        }
+        return response.json();
+      })
+      .then(data => {
+        hideLoading();
+        
+        updateBotStatusUI(isActive);
+        
+        // Si se activa y requiere QR, mostrarlo
+        if (isActive && data.requiresQR) {
+          qrCodeContainer.classList.remove('d-none');
+          if (data.qrCode) {
+            renderQRCode(data.qrCode);
+          }
+        } else {
+          qrCodeContainer.classList.add('d-none');
+        }
+        
+        Swal.fire({
+          icon: 'success',
+          title: isActive ? 'Bot activado' : 'Bot desactivado',
+          text: isActive ? 'El bot de WhatsApp ha sido activado correctamente' : 'El bot de WhatsApp ha sido desactivado',
+          timer: 2000,
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        hideLoading();
+        
+        // Revertir el cambio en la UI
+        botEnableSwitch.checked = !isActive;
+        updateBotStatusUI(!isActive);
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `No se pudo ${isActive ? 'activar' : 'desactivar'} el bot de WhatsApp. Por favor, intenta nuevamente.`
+        });
+      });
+    });
+    
+    // Función para renderizar un código QR
+    function renderQRCode(qrData) {
+      const qrCode = document.getElementById('qrCode');
+      qrCode.innerHTML = '';
+      
+      // En un escenario real, aquí utilizaríamos una biblioteca como qrcode.js
+      // Como simulación, mostramos el QR como texto
+      const qrElement = document.createElement('div');
+      qrElement.style.width = '200px';
+      qrElement.style.height = '200px';
+      qrElement.style.backgroundColor = '#f5f5f5';
+      qrElement.style.display = 'flex';
+      qrElement.style.alignItems = 'center';
+      qrElement.style.justifyContent = 'center';
+      qrElement.textContent = 'Código QR';
+      
+      qrCode.appendChild(qrElement);
+    }
+    
+    // Botón de reconexión
+    reconnectBot.addEventListener('click', function() {
+      showLoading();
+      
+      // En un escenario real, esto haría una llamada a la API
+      fetch('/api/admin/whatsapp/reconnect', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al reconectar el bot');
+        }
+        return response.json();
+      })
+      .then(data => {
+        hideLoading();
+        
+        // Mostrar código QR si está disponible
+        if (data.qrCode) {
+          qrCodeContainer.classList.remove('d-none');
+          renderQRCode(data.qrCode);
+          
+          botStatusText.textContent = 'Esperando conexión';
+          botStatusText.classList.remove('text-success', 'text-danger');
+          botStatusText.classList.add('text-warning');
+          botStatusIndicator.classList.remove('text-success', 'text-danger');
+          botStatusIndicator.classList.add('text-warning');
+          botLastSeen.textContent = 'Por favor escanea el código QR';
+        }
+        
+        Swal.fire({
+          title: 'Reconexión solicitada',
+          text: 'Por favor escanea el código QR con WhatsApp para conectar el bot',
+          icon: 'info',
+          confirmButtonColor: '#25d366'
+        });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        hideLoading();
+        
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo solicitar la reconexión. Por favor, intenta nuevamente.',
+          icon: 'error'
+        });
+      });
+    });
+    
+    // Botón de refresco de estado
+    refreshBotStatus.addEventListener('click', function() {
+      checkBotStatus();
+    });
+    
+    // Botón de actualización del dashboard
+    refreshDashboard.addEventListener('click', function() {
+      location.reload();
+    });
+    
+    // Simulamos actualización en tiempo real (cada 30 segundos)
+    // En un entorno real, podrían utilizarse websockets o polling de la API
+    setInterval(checkBotStatus, 30000);
+  });
+</script> 

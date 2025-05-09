@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Bot de WhatsApp para Propiedades</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+    }
+    .hero {
+      background: linear-gradient(135deg, #25d366 0%, #075e54 100%);
+      color: white;
+      padding: 4rem 0;
+    }
+    .features {
+      padding: 4rem 0;
+    }
+    .feature-card {
+      border: none;
+      border-radius: 15px;
+      transition: transform 0.3s, box-shadow 0.3s;
+      height: 100%;
+    }
+    .feature-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      color: #25d366;
+    }
+    .footer {
+      background-color: #075e54;
+      color: white;
+      padding: 2rem 0;
+    }
+    .btn-whatsapp {
+      background-color: #25d366;
+      border-color: #25d366;
+      color: white;
+    }
+    .btn-whatsapp:hover {
+      background-color: #128c7e;
+      border-color: #128c7e;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Barra de navegación -->
+  <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #075e54;">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <i class="fab fa-whatsapp me-2"></i> WhatsApp Property Bot
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="/">Inicio</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/admin">Panel Admin</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/api/auth/login">Iniciar Sesión</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Sección Hero -->
+  <section class="hero">
+    <div class="container text-center">
+      <h1 class="display-4 fw-bold mb-4">Bot de WhatsApp para Consultas de Propiedades</h1>
+      <p class="lead mb-5">Respuestas inteligentes sobre propiedades inmobiliarias utilizando IA y Google Sheets</p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="/admin" class="btn btn-light btn-lg">Acceder al Panel</a>
+        <a href="#features" class="btn btn-outline-light btn-lg">Conocer más</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Características -->
+  <section id="features" class="features">
+    <div class="container">
+      <h2 class="text-center mb-5">Características Principales</h2>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card feature-card shadow-sm p-4">
+            <div class="text-center">
+              <div class="feature-icon">
+                <i class="fab fa-whatsapp"></i>
+              </div>
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title">Integración con WhatsApp</h5>
+              <p class="card-text">Responde consultas de usuarios directamente en WhatsApp de forma automática y natural.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card feature-card shadow-sm p-4">
+            <div class="text-center">
+              <div class="feature-icon">
+                <i class="fas fa-robot"></i>
+              </div>
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title">IA Avanzada</h5>
+              <p class="card-text">Utiliza inteligencia artificial para entender y responder consultas de forma precisa y personalizada.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card feature-card shadow-sm p-4">
+            <div class="text-center">
+              <div class="feature-icon">
+                <i class="fas fa-table"></i>
+              </div>
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title">Google Sheets</h5>
+              <p class="card-text">Conecta con tus hojas de cálculo para mantener tu catálogo de propiedades actualizado fácilmente.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card feature-card shadow-sm p-4">
+            <div class="text-center">
+              <div class="feature-icon">
+                <i class="fas fa-users-cog"></i>
+              </div>
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title">Gestión de Usuarios</h5>
+              <p class="card-text">Administra quién puede usar el bot y con qué permisos a través del panel de control.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card feature-card shadow-sm p-4">
+            <div class="text-center">
+              <div class="feature-icon">
+                <i class="fas fa-chart-bar"></i>
+              </div>
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title">Estadísticas y Reportes</h5>
+              <p class="card-text">Visualiza el rendimiento del bot, las consultas más frecuentes y las respuestas proporcionadas.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card feature-card shadow-sm p-4">
+            <div class="text-center">
+              <div class="feature-icon">
+                <i class="fas fa-lock"></i>
+              </div>
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title">Seguridad Avanzada</h5>
+              <p class="card-text">Sistema de autenticación seguro y gestión de permisos para proteger la información.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo funciona -->
+  <section class="bg-light py-5">
+    <div class="container">
+      <h2 class="text-center mb-5">¿Cómo Funciona?</h2>
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <img src="https://via.placeholder.com/600x400" alt="Diagrama de funcionamiento" class="img-fluid rounded shadow">
+        </div>
+        <div class="col-md-6">
+          <div class="accordion" id="howItWorks">
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#step1">
+                  1. Configuración de Google Sheets
+                </button>
+              </h2>
+              <div id="step1" class="accordion-collapse collapse show" data-bs-parent="#howItWorks">
+                <div class="accordion-body">
+                  Conecta tus hojas de Google con información de propiedades al sistema mediante el panel de administración.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step2">
+                  2. Configuración del Bot de WhatsApp
+                </button>
+              </h2>
+              <div id="step2" class="accordion-collapse collapse" data-bs-parent="#howItWorks">
+                <div class="accordion-body">
+                  Escanea el código QR con tu WhatsApp para conectar el bot a tu número de teléfono empresarial.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step3">
+                  3. Gestión de Usuarios
+                </button>
+              </h2>
+              <div id="step3" class="accordion-collapse collapse" data-bs-parent="#howItWorks">
+                <div class="accordion-body">
+                  Configura quién puede interactuar con el bot y qué permisos tiene cada usuario en el sistema.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step4">
+                  4. Consultas de Usuarios
+                </button>
+              </h2>
+              <div id="step4" class="accordion-collapse collapse" data-bs-parent="#howItWorks">
+                <div class="accordion-body">
+                  Los usuarios envían consultas al número de WhatsApp y el bot responde automáticamente con información precisa de las propiedades.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#step5">
+                  5. Análisis y Mejora
+                </button>
+              </h2>
+              <div id="step5" class="accordion-collapse collapse" data-bs-parent="#howItWorks">
+                <div class="accordion-body">
+                  Revisa las estadísticas y consultas para mejorar las respuestas y actualizar la información de las propiedades.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-5 text-center" style="background-color: #dcf8c6;">
+    <div class="container">
+      <h2 class="mb-4">¿Listo para comenzar?</h2>
+      <p class="lead mb-4">Accede al panel de administración y configura tu bot de WhatsApp en minutos</p>
+      <a href="/admin" class="btn btn-whatsapp btn-lg px-5">Acceder al Panel</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h5><i class="fab fa-whatsapp me-2"></i> WhatsApp Property Bot</h5>
+          <p>Una solución inteligente para la consulta de propiedades inmobiliarias mediante WhatsApp y Google Sheets.</p>
+        </div>
+        <div class="col-md-3">
+          <h5>Enlaces</h5>
+          <ul class="list-unstyled">
+            <li><a href="/" class="text-white">Inicio</a></li>
+            <li><a href="/admin" class="text-white">Panel Admin</a></li>
+            <li><a href="#features" class="text-white">Características</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3">
+          <h5>Contacto</h5>
+          <ul class="list-unstyled">
+            <li><i class="fas fa-envelope me-2"></i> soporte@whatsappbot.com</li>
+            <li><i class="fas fa-phone me-2"></i> +1 234 567 890</li>
+          </ul>
+        </div>
+      </div>
+      <hr class="my-4 bg-light">
+      <div class="text-center">
+        <p class="mb-0">&copy; <%= new Date().getFullYear() %> WhatsApp Property Bot. Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

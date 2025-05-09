@@ -1,0 +1,404 @@
+<div class="container-fluid">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Gestión de Roles de WhatsApp</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newRoleModal">
+      <i class="fas fa-plus"></i> Nuevo Rol
+    </button>
+  </div>
+
+  <!-- Tabla de roles -->
+  <div class="card">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Roles Disponibles</h5>
+        <div class="input-group w-25">
+          <input type="text" class="form-control" id="searchInput" placeholder="Buscar...">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="rolesTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Límite Diario</th>
+              <th>Límite Mensual</th>
+              <th>Días de Validez</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Los datos se cargarán dinámicamente con JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      <div id="loadingSpinner" class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Cargando roles...</p>
+      </div>
+      <div id="noDataMessage" class="text-center p-4" style="display: none;">
+        <i class="fas fa-user-tag fa-4x text-muted mb-3"></i>
+        <h5>No hay roles definidos</h5>
+        <p class="text-muted">Crea un nuevo rol para empezar</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de nuevo rol -->
+  <div class="modal fade" id="newRoleModal" tabindex="-1" aria-labelledby="newRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newRoleModalLabel">Nuevo Rol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newRoleForm">
+            <div class="mb-3">
+              <label for="name" class="form-label">Nombre del rol</label>
+              <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Descripción</label>
+              <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="maxDailyMessages" class="form-label">Límite de mensajes diarios</label>
+              <input type="number" class="form-control" id="maxDailyMessages" name="maxDailyMessages" min="0">
+              <small class="form-text text-muted">Dejar en blanco para ilimitado</small>
+            </div>
+            <div class="mb-3">
+              <label for="maxMonthlyMessages" class="form-label">Límite de mensajes mensuales</label>
+              <input type="number" class="form-control" id="maxMonthlyMessages" name="maxMonthlyMessages" min="0">
+              <small class="form-text text-muted">Dejar en blanco para ilimitado</small>
+            </div>
+            <div class="mb-3">
+              <label for="validUntilDays" class="form-label">Días de validez</label>
+              <input type="number" class="form-control" id="validUntilDays" name="validUntilDays" min="1" value="30">
+              <small class="form-text text-muted">Número de días que durará la suscripción</small>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="saveRoleBtn">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de editar rol -->
+  <div class="modal fade" id="editRoleModal" tabindex="-1" aria-labelledby="editRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editRoleModalLabel">Editar Rol</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editRoleForm">
+            <input type="hidden" id="editRoleId" name="id">
+            <div class="mb-3">
+              <label for="editName" class="form-label">Nombre del rol</label>
+              <input type="text" class="form-control" id="editName" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="editDescription" class="form-label">Descripción</label>
+              <textarea class="form-control" id="editDescription" name="description" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="editMaxDailyMessages" class="form-label">Límite de mensajes diarios</label>
+              <input type="number" class="form-control" id="editMaxDailyMessages" name="maxDailyMessages" min="0">
+              <small class="form-text text-muted">Dejar en blanco para ilimitado</small>
+            </div>
+            <div class="mb-3">
+              <label for="editMaxMonthlyMessages" class="form-label">Límite de mensajes mensuales</label>
+              <input type="number" class="form-control" id="editMaxMonthlyMessages" name="maxMonthlyMessages" min="0">
+              <small class="form-text text-muted">Dejar en blanco para ilimitado</small>
+            </div>
+            <div class="mb-3">
+              <label for="editValidUntilDays" class="form-label">Días de validez</label>
+              <input type="number" class="form-control" id="editValidUntilDays" name="validUntilDays" min="1">
+              <small class="form-text text-muted">Número de días que durará la suscripción</small>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="updateRoleBtn">Actualizar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Referencias a elementos
+    const rolesTable = document.getElementById('rolesTable');
+    const rolesTableBody = rolesTable.querySelector('tbody');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const noDataMessage = document.getElementById('noDataMessage');
+    const searchInput = document.getElementById('searchInput');
+    const newRoleForm = document.getElementById('newRoleForm');
+    const editRoleForm = document.getElementById('editRoleForm');
+    const saveRoleBtn = document.getElementById('saveRoleBtn');
+    const updateRoleBtn = document.getElementById('updateRoleBtn');
+    
+    // Variables de estado
+    let roles = [];
+    let filteredRoles = [];
+    
+    // Cargar roles al iniciar
+    loadRoles();
+    
+    // Buscar roles al escribir
+    searchInput.addEventListener('input', filterRoles);
+    
+    // Guardar nuevo rol
+    saveRoleBtn.addEventListener('click', saveRole);
+    
+    // Actualizar rol existente
+    updateRoleBtn.addEventListener('click', updateRole);
+    
+    // Función para cargar roles
+    async function loadRoles() {
+      loadingSpinner.style.display = 'block';
+      rolesTableBody.innerHTML = '';
+      
+      try {
+        const response = await fetch('/api/whatsapp-roles');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          roles = result.data;
+          filteredRoles = [...roles];
+          renderRoles();
+        } else {
+          showError('No se pudieron cargar los roles');
+        }
+      } catch (error) {
+        console.error('Error al cargar roles:', error);
+        showError('Error al cargar los roles');
+      } finally {
+        loadingSpinner.style.display = 'none';
+      }
+    }
+    
+    // Renderizar roles en la tabla
+    function renderRoles() {
+      rolesTableBody.innerHTML = '';
+      
+      if (filteredRoles.length === 0) {
+        noDataMessage.style.display = 'block';
+        return;
+      }
+      
+      noDataMessage.style.display = 'none';
+      
+      filteredRoles.forEach(role => {
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+          <td>${role.id}</td>
+          <td>${role.name}</td>
+          <td>${role.description || '-'}</td>
+          <td>${role.max_daily_messages || 'Ilimitado'}</td>
+          <td>${role.max_monthly_messages || 'Ilimitado'}</td>
+          <td>${role.valid_until_days}</td>
+          <td>
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-primary edit-btn" data-id="${role.id}">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button type="button" class="btn btn-outline-danger delete-btn" data-id="${role.id}">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        
+        rolesTableBody.appendChild(tr);
+      });
+      
+      // Agregar event listeners para botones de editar y eliminar
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id)));
+      });
+      
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => confirmDelete(parseInt(btn.dataset.id)));
+      });
+    }
+    
+    // Filtrar roles
+    function filterRoles() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      
+      if (!searchTerm) {
+        filteredRoles = [...roles];
+      } else {
+        filteredRoles = roles.filter(role => 
+          role.name.toLowerCase().includes(searchTerm) || 
+          (role.description && role.description.toLowerCase().includes(searchTerm))
+        );
+      }
+      
+      renderRoles();
+    }
+    
+    // Guardar nuevo rol
+    async function saveRole() {
+      const formData = new FormData(newRoleForm);
+      const roleData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        maxDailyMessages: formData.get('maxDailyMessages') ? parseInt(formData.get('maxDailyMessages')) : null,
+        maxMonthlyMessages: formData.get('maxMonthlyMessages') ? parseInt(formData.get('maxMonthlyMessages')) : null,
+        validUntilDays: parseInt(formData.get('validUntilDays'))
+      };
+      
+      try {
+        const response = await fetch('/api/whatsapp-roles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(roleData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('Éxito', 'Rol creado correctamente', 'success');
+          $('#newRoleModal').modal('hide');
+          newRoleForm.reset();
+          loadRoles();
+        } else {
+          showToast('Error', result.message || 'No se pudo crear el rol', 'error');
+        }
+      } catch (error) {
+        console.error('Error al guardar rol:', error);
+        showToast('Error', 'Error al crear el rol', 'error');
+      }
+    }
+    
+    // Abrir modal de edición
+    function openEditModal(roleId) {
+      const role = roles.find(r => r.id === roleId);
+      
+      if (!role) return;
+      
+      document.getElementById('editRoleId').value = role.id;
+      document.getElementById('editName').value = role.name;
+      document.getElementById('editDescription').value = role.description || '';
+      document.getElementById('editMaxDailyMessages').value = role.max_daily_messages || '';
+      document.getElementById('editMaxMonthlyMessages').value = role.max_monthly_messages || '';
+      document.getElementById('editValidUntilDays').value = role.valid_until_days;
+      
+      $('#editRoleModal').modal('show');
+    }
+    
+    // Actualizar rol existente
+    async function updateRole() {
+      const formData = new FormData(editRoleForm);
+      const roleId = parseInt(formData.get('id'));
+      
+      const roleData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        maxDailyMessages: formData.get('maxDailyMessages') ? parseInt(formData.get('maxDailyMessages')) : null,
+        maxMonthlyMessages: formData.get('maxMonthlyMessages') ? parseInt(formData.get('maxMonthlyMessages')) : null,
+        validUntilDays: parseInt(formData.get('validUntilDays'))
+      };
+      
+      try {
+        const response = await fetch(`/api/whatsapp-roles/${roleId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(roleData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('Éxito', 'Rol actualizado correctamente', 'success');
+          $('#editRoleModal').modal('hide');
+          loadRoles();
+        } else {
+          showToast('Error', result.message || 'No se pudo actualizar el rol', 'error');
+        }
+      } catch (error) {
+        console.error('Error al actualizar rol:', error);
+        showToast('Error', 'Error al actualizar el rol', 'error');
+      }
+    }
+    
+    // Confirmar eliminación
+    function confirmDelete(roleId) {
+      if (confirm('¿Está seguro de eliminar este rol? Esta acción no se puede deshacer.')) {
+        deleteRole(roleId);
+      }
+    }
+    
+    // Eliminar rol
+    async function deleteRole(roleId) {
+      try {
+        const response = await fetch(`/api/whatsapp-roles/${roleId}`, {
+          method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('Éxito', 'Rol eliminado correctamente', 'success');
+          loadRoles();
+        } else {
+          showToast('Error', result.message || 'No se pudo eliminar el rol', 'error');
+        }
+      } catch (error) {
+        console.error('Error al eliminar rol:', error);
+        showToast('Error', 'Error al eliminar el rol', 'error');
+      }
+    }
+    
+    // Mostrar mensaje de toast
+    function showToast(title, message, type) {
+      // Implementar según librería de toasts utilizada
+      if (typeof Toastify !== 'undefined') {
+        Toastify({
+          text: message,
+          duration: 3000,
+          close: true,
+          gravity: 'top',
+          position: 'right',
+          backgroundColor: type === 'success' ? '#28a745' : '#dc3545'
+        }).showToast();
+      } else {
+        alert(`${title}: ${message}`);
+      }
+    }
+    
+    // Mostrar error
+    function showError(message) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'alert alert-danger mt-3';
+      errorDiv.textContent = message;
+      
+      rolesTable.parentNode.insertBefore(errorDiv, rolesTable.nextSibling);
+      
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 5000);
+    }
+  });
+</script> 

@@ -1,0 +1,295 @@
+<!-- Page header -->
+<div class="page-header d-print-none">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <div class="page-pretitle">
+          Consulta #<%= query.id %>
+        </div>
+        <h2 class="page-title">
+          Detalles de Consulta
+        </h2>
+      </div>
+      <div class="col-auto ms-auto d-print-none">
+        <div class="btn-list">
+          <a href="/admin/queries" class="btn btn-outline-primary">
+            <i class="ti ti-arrow-left me-1"></i>
+            Volver a la lista
+          </a>
+          <% if (query.status === 'pending') { %>
+            <div class="dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="ti ti-tools me-1"></i>
+                Acciones
+              </button>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="#" id="markAsProcessed">
+                  <i class="ti ti-check me-1"></i>
+                  Marcar como procesada
+                </a>
+                <a class="dropdown-item" href="#" id="markAsFailed">
+                  <i class="ti ti-x me-1"></i>
+                  Marcar como fallida
+                </a>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page body -->
+<div class="page-body">
+  <div class="container-xl">
+    <div class="row row-cards">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Información de la Consulta</h3>
+          </div>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-lg-12">
+                <h4>Texto de la consulta:</h4>
+                <div class="p-3 bg-light rounded mb-3">
+                  <%= query.query_text %>
+                </div>
+              </div>
+            </div>
+            
+            <% if (query.response_text) { %>
+              <div class="row mb-3">
+                <div class="col-lg-12">
+                  <h4>Respuesta enviada:</h4>
+                  <div class="p-3 bg-light rounded mb-3">
+                    <%= query.response_text %>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+            
+            <% if (query.processed_data) { %>
+              <div class="row mb-3">
+                <div class="col-lg-12">
+                  <h4>Datos procesados:</h4>
+                  <div class="p-3 bg-light rounded mb-3 overflow-auto" style="max-height: 300px;">
+                    <pre class="m-0"><%= typeof query.processed_data === 'object' ? JSON.stringify(query.processed_data, null, 2) : query.processed_data %></pre>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+            
+            <% if (query.error_message) { %>
+              <div class="row mb-3">
+                <div class="col-lg-12">
+                  <h4>Mensaje de error:</h4>
+                  <div class="p-3 bg-danger-lt rounded mb-3">
+                    <%= query.error_message %>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+            
+            <% if (query.google_sheet_id && sheet) { %>
+              <div class="row mb-3">
+                <div class="col-lg-12">
+                  <h4>Datos de la hoja de Google:</h4>
+                  <div class="table-responsive">
+                    <table class="table table-vcenter">
+                      <tr>
+                        <th>ID de Hoja:</th>
+                        <td><%= sheet.id %></td>
+                      </tr>
+                      <tr>
+                        <th>Nombre:</th>
+                        <td><%= sheet.name %></td>
+                      </tr>
+                      <tr>
+                        <th>ID de Google Sheet:</th>
+                        <td>
+                          <code><%= sheet.sheet_id %></code>
+                          <a href="https://docs.google.com/spreadsheets/d/<%= sheet.sheet_id %>/edit" target="_blank" class="ms-2 btn btn-sm">
+                            <i class="ti ti-external-link"></i> Abrir
+                          </a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Rango:</th>
+                        <td><code><%= sheet.range %></code></td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-4">
+        <div class="row row-cards">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Estado</h3>
+              </div>
+              <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                  <div class="me-3">
+                    <% if (query.status === 'pending') { %>
+                      <span class="avatar avatar-xl bg-yellow-lt">
+                        <i class="ti ti-clock"></i>
+                      </span>
+                    <% } else if (query.status === 'processed') { %>
+                      <span class="avatar avatar-xl bg-green-lt">
+                        <i class="ti ti-check"></i>
+                      </span>
+                    <% } else { %>
+                      <span class="avatar avatar-xl bg-red-lt">
+                        <i class="ti ti-x"></i>
+                      </span>
+                    <% } %>
+                  </div>
+                  <div>
+                    <h4 class="m-0">
+                      <% if (query.status === 'pending') { %>
+                        Pendiente
+                      <% } else if (query.status === 'processed') { %>
+                        Procesada
+                      <% } else { %>
+                        Fallida
+                      <% } %>
+                    </h4>
+                    <p class="text-muted m-0">
+                      <% if (query.status === 'pending') { %>
+                        Esperando procesamiento
+                      <% } else if (query.status === 'processed') { %>
+                        Consulta atendida correctamente
+                      <% } else { %>
+                        Error durante el procesamiento
+                      <% } %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Información de contacto</h3>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <div class="datagrid">
+                    <div class="datagrid-item">
+                      <div class="datagrid-title">Número de WhatsApp</div>
+                      <div class="datagrid-content">
+                        <%= query.phone_number %>
+                        <a href="https://wa.me/<%= query.phone_number.replace('+', '') %>" target="_blank" class="ms-2 btn-icon btn-sm btn-ghost-primary" title="Abrir chat">
+                          <i class="ti ti-brand-whatsapp"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Fechas</h3>
+              </div>
+              <div class="card-body">
+                <div class="datagrid">
+                  <div class="datagrid-item">
+                    <div class="datagrid-title">Creada</div>
+                    <div class="datagrid-content">
+                      <%= new Date(query.created_at).toLocaleString('es-ES') %>
+                    </div>
+                  </div>
+                  <% if (query.updated_at) { %>
+                    <div class="datagrid-item">
+                      <div class="datagrid-title">Actualizada</div>
+                      <div class="datagrid-content">
+                        <%= new Date(query.updated_at).toLocaleString('es-ES') %>
+                      </div>
+                    </div>
+                  <% } %>
+                  <% if (query.processed_at) { %>
+                    <div class="datagrid-item">
+                      <div class="datagrid-title">Procesada</div>
+                      <div class="datagrid-content">
+                        <%= new Date(query.processed_at).toLocaleString('es-ES') %>
+                      </div>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Función para cambiar el estado de la consulta
+    function changeQueryStatus(status) {
+      showLoading();
+      
+      fetch(`/api/queries/<%= query.id %>/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Error al actualizar el estado');
+        }
+        return response.json();
+      })
+      .then(data => {
+        hideLoading();
+        Swal.fire({
+          title: 'Estado actualizado',
+          text: `La consulta ha sido marcada como ${status === 'processed' ? 'procesada' : 'fallida'}`,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          window.location.reload();
+        });
+      })
+      .catch(error => {
+        hideLoading();
+        Swal.fire({
+          title: 'Error',
+          text: error.message,
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      });
+    }
+    
+    // Eventos para los botones de cambio de estado
+    document.getElementById('markAsProcessed')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      changeQueryStatus('processed');
+    });
+    
+    document.getElementById('markAsFailed')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      changeQueryStatus('failed');
+    });
+  });
+</script> 

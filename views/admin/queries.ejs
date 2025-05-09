@@ -1,0 +1,172 @@
+<!-- Page header -->
+<div class="page-header d-print-none">
+  <div class="container-xl">
+    <div class="row g-2 align-items-center">
+      <div class="col">
+        <h2 class="page-title">
+          Consultas de Usuarios
+        </h2>
+        <div class="text-muted mt-1">Historial de consultas recibidas por WhatsApp</div>
+      </div>
+      <div class="col-auto ms-auto d-print-none">
+        <div class="btn-list">
+          <span class="d-none d-sm-inline">
+            <a href="#" class="btn" id="refreshQueriesBtn">
+              <i class="ti ti-refresh me-1"></i>
+              Actualizar
+            </a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Page body -->
+<div class="page-body">
+  <div class="container-xl">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Listado de Consultas</h3>
+        <div class="card-actions">
+          <div class="btn-group">
+            <a href="/admin/queries" class="btn btn-outline-primary <%= !currentStatus ? 'active' : '' %>">
+              Todas
+            </a>
+            <a href="/admin/queries?status=pending" class="btn btn-outline-primary <%= currentStatus === 'pending' ? 'active' : '' %>">
+              Pendientes
+            </a>
+            <a href="/admin/queries?status=processed" class="btn btn-outline-primary <%= currentStatus === 'processed' ? 'active' : '' %>">
+              Procesadas
+            </a>
+            <a href="/admin/queries?status=failed" class="btn btn-outline-primary <%= currentStatus === 'failed' ? 'active' : '' %>">
+              Fallidas
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="card-body border-bottom py-3">
+        <div class="d-flex">
+          <div class="ms-auto text-muted">
+            Buscar:
+            <div class="ms-2 d-inline-block">
+              <input type="text" class="form-control form-control-sm" id="query-search" placeholder="Texto de búsqueda...">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table datatable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Consulta</th>
+              <th>Número</th>
+              <th>Hoja</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th class="w-1">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (queries && queries.length > 0) { %>
+              <% queries.forEach(query => { %>
+                <tr>
+                  <td><%= query.id %></td>
+                  <td class="text-wrap" style="max-width: 300px; white-space: normal;">
+                    <div class="text-truncate" title="<%= query.query_text %>">
+                      <%= query.query_text %>
+                    </div>
+                  </td>
+                  <td><%= query.phone_number %></td>
+                  <td><%= query.sheet_name || 'N/A' %></td>
+                  <td>
+                    <% if (query.status === 'pending') { %>
+                      <span class="badge bg-yellow">Pendiente</span>
+                    <% } else if (query.status === 'processed') { %>
+                      <span class="badge bg-green">Procesada</span>
+                    <% } else { %>
+                      <span class="badge bg-red">Fallida</span>
+                    <% } %>
+                  </td>
+                  <td><%= new Date(query.created_at).toLocaleString('es-ES') %></td>
+                  <td>
+                    <div class="btn-list flex-nowrap">
+                      <a href="/admin/queries/<%= query.id %>" class="btn btn-icon btn-primary">
+                        <i class="ti ti-eye"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center py-4">
+                  <div class="empty">
+                    <div class="empty-img">
+                      <i class="ti ti-message-off" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="empty-title">No hay consultas disponibles</p>
+                    <p class="empty-subtitle text-muted">
+                      No se encontraron consultas que coincidan con los criterios de filtrado.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      
+      <% if (pagination && pagination.pages > 1) { %>
+        <div class="card-footer d-flex align-items-center">
+          <p class="m-0 text-muted">Mostrando <span><%= Math.min(pagination.limit, pagination.total) %></span> de <span><%= pagination.total %></span> entradas</p>
+          <ul class="pagination m-0 ms-auto">
+            <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
+              <a class="page-link" href="/admin/queries?page=<%= pagination.page - 1 %>&limit=<%= pagination.limit %><%= currentStatus ? '&status=' + currentStatus : '' %>">
+                <i class="ti ti-chevron-left"></i>
+                Anterior
+              </a>
+            </li>
+            <% for (let i = 1; i <= pagination.pages; i++) { %>
+              <li class="page-item <%= pagination.page === i ? 'active' : '' %>">
+                <a class="page-link" href="/admin/queries?page=<%= i %>&limit=<%= pagination.limit %><%= currentStatus ? '&status=' + currentStatus : '' %>"><%= i %></a>
+              </li>
+            <% } %>
+            <li class="page-item <%= pagination.page >= pagination.pages ? 'disabled' : '' %>">
+              <a class="page-link" href="/admin/queries?page=<%= pagination.page + 1 %>&limit=<%= pagination.limit %><%= currentStatus ? '&status=' + currentStatus : '' %>">
+                Siguiente
+                <i class="ti ti-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar DataTables con soporte para búsqueda
+    const table = $('.datatable').DataTable({
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+      },
+      responsive: true,
+      dom: 't', // Ocultar los controles predeterminados y solo mostrar la tabla
+      paging: false // Usar la paginación del servidor en lugar de la de DataTables
+    });
+    
+    // Conectar el campo de búsqueda personalizado con DataTables
+    $('#query-search').on('keyup', function() {
+      table.search($(this).val()).draw();
+    });
+    
+    // Botón para actualizar la lista
+    $('#refreshQueriesBtn').on('click', function(e) {
+      e.preventDefault();
+      window.location.reload();
+    });
+  });
+</script> 

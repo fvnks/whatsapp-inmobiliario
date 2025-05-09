@@ -1,0 +1,545 @@
+<div class="container-fluid">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Explorador de Datos de Google Sheets</h2>
+    <div>
+      <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#helpModal">
+        <i class="fas fa-question-circle"></i> Ayuda
+      </button>
+      <a href="/admin/sheets" class="btn btn-outline-secondary">
+        <i class="fas fa-cog"></i> Gestionar Conexiones
+      </a>
+    </div>
+  </div>
+
+  <!-- Selector de hoja de Google -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="sheetSelector" class="form-label">Seleccionar hoja de Google</label>
+          <select class="form-select" id="sheetSelector">
+            <option value="">-- Seleccionar una hoja --</option>
+            <% sheets.forEach(sheet => { %>
+              <option value="<%= sheet.id %>" <%= selectedSheet && selectedSheet.id === sheet.id ? 'selected' : '' %>>
+                <%= sheet.name %> (<%= sheet.description ? sheet.description : 'Sin descripción' %>)
+              </option>
+            <% }); %>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Acciones</label>
+          <div class="d-flex">
+            <button class="btn btn-primary me-2" id="loadDataBtn" disabled>
+              <i class="fas fa-sync-alt"></i> Cargar Datos
+            </button>
+            <div class="dropdown">
+              <button class="btn btn-success dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                <i class="fas fa-file-export"></i> Exportar
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                <li><a class="dropdown-item" href="#" id="exportJson">JSON</a></li>
+                <li><a class="dropdown-item" href="#" id="exportCsv">CSV</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros de búsqueda -->
+  <div class="card mb-4" id="filterCard" style="display: none;">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Filtros de búsqueda</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="addFilterBtn">
+          <i class="fas fa-plus"></i> Agregar Filtro
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <form id="searchForm">
+        <div id="filtersContainer">
+          <!-- Los filtros se agregarán aquí dinámicamente -->
+        </div>
+        <div class="mt-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="matchAllFilters" checked>
+            <label class="form-check-label" for="matchAllFilters">Coincidir con todos los filtros (AND)</label>
+          </div>
+          <div class="mt-2">
+            <button type="submit" class="btn btn-primary" id="searchBtn">
+              <i class="fas fa-search"></i> Buscar
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="clearFiltersBtn">
+              <i class="fas fa-times"></i> Limpiar Filtros
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Resultados -->
+  <div class="card" id="resultsCard" style="display: none;">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Resultados <span id="resultCount" class="badge bg-primary ms-2">0</span></h5>
+        <div>
+          <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">
+            <i class="fas fa-sync-alt"></i> Actualizar
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="dataTable">
+          <thead id="tableHeader">
+            <!-- Los encabezados se generarán dinámicamente -->
+          </thead>
+          <tbody id="tableBody">
+            <!-- Los datos se cargarán aquí -->
+          </tbody>
+        </table>
+        <div id="noDataMessage" class="text-center p-5" style="display: none;">
+          <i class="fas fa-table fa-4x text-muted mb-3"></i>
+          <h5>No hay datos para mostrar</h5>
+          <p class="text-muted">Intenta cambiar tus filtros de búsqueda o selecciona otra hoja.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spinner de carga -->
+  <div id="loadingSpinner" class="text-center p-5" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2">Cargando datos, por favor espera...</p>
+  </div>
+
+  <!-- Modal de Ayuda -->
+  <div class="modal fade" id="helpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Ayuda del Explorador de Datos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6><i class="fas fa-table text-primary me-2"></i>Seleccionar una hoja</h6>
+              <p>Selecciona una hoja de Google Sheets de la lista desplegable para explorar sus datos.</p>
+              <h6><i class="fas fa-search text-success me-2"></i>Filtrar datos</h6>
+              <p>Puedes añadir múltiples filtros para buscar datos específicos:</p>
+              <ul>
+                <li><strong>Contiene:</strong> Busca registros donde el campo contiene el valor.</li>
+                <li><strong>Igual a:</strong> Busca coincidencias exactas.</li>
+                <li><strong>Comienza con:</strong> Busca registros donde el campo comienza con el valor.</li>
+                <li><strong>Termina con:</strong> Busca registros donde el campo termina con el valor.</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h6><i class="fas fa-file-export text-danger me-2"></i>Exportar datos</h6>
+              <p>Puedes exportar los datos en diferentes formatos:</p>
+              <ul>
+                <li><strong>JSON:</strong> Útil para integración con sistemas.</li>
+                <li><strong>CSV:</strong> Puedes abrir este formato en Excel u otras hojas de cálculo.</li>
+              </ul>
+              <h6><i class="fas fa-info-circle text-info me-2"></i>Consejos</h6>
+              <ul>
+                <li>Usa el botón "Actualizar" para obtener datos actualizados de la hoja.</li>
+                <li>Puedes combinar varios filtros para búsquedas más precisas.</li>
+                <li>Marca "Coincidir con todos los filtros" para usar operador AND en lugar de OR.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-5 mb-3 text-center text-muted">
+    <p>&copy; <%= new Date().getFullYear() %> WhatsApp Property Bot</p>
+  </footer>
+</div>
+
+<!-- Scripts específicos de la página -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Referencias a elementos DOM
+    const sheetSelector = document.getElementById('sheetSelector');
+    const loadDataBtn = document.getElementById('loadDataBtn');
+    const exportDropdown = document.getElementById('exportDropdown');
+    const exportJson = document.getElementById('exportJson');
+    const exportCsv = document.getElementById('exportCsv');
+    const filterCard = document.getElementById('filterCard');
+    const addFilterBtn = document.getElementById('addFilterBtn');
+    const filtersContainer = document.getElementById('filtersContainer');
+    const searchForm = document.getElementById('searchForm');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const matchAllFilters = document.getElementById('matchAllFilters');
+    const resultsCard = document.getElementById('resultsCard');
+    const tableHeader = document.getElementById('tableHeader');
+    const tableBody = document.getElementById('tableBody');
+    const resultCount = document.getElementById('resultCount');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const noDataMessage = document.getElementById('noDataMessage');
+    
+    // Variables para almacenar datos
+    let currentSheetId = '';
+    let availableColumns = [];
+    let currentData = [];
+    let dataTable;
+    
+    // Inicializar - habilitar/deshabilitar botones según la selección
+    updateButtonState();
+    
+    // Si hay una hoja seleccionada al cargar, cargar sus datos
+    if (sheetSelector.value) {
+      currentSheetId = sheetSelector.value;
+      loadData();
+    }
+    
+    // Event Listeners
+    sheetSelector.addEventListener('change', function() {
+      currentSheetId = this.value;
+      updateButtonState();
+      if (currentSheetId) {
+        loadData();
+      } else {
+        hideResults();
+      }
+    });
+    
+    loadDataBtn.addEventListener('click', loadData);
+    refreshBtn.addEventListener('click', loadData);
+    
+    addFilterBtn.addEventListener('click', addFilter);
+    clearFiltersBtn.addEventListener('click', clearFilters);
+    
+    searchForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      searchData();
+    });
+    
+    exportJson.addEventListener('click', function() {
+      exportData('json');
+    });
+    
+    exportCsv.addEventListener('click', function() {
+      exportData('csv');
+    });
+    
+    // Función para actualizar el estado de los botones
+    function updateButtonState() {
+      const hasSheet = !!currentSheetId;
+      loadDataBtn.disabled = !hasSheet;
+      exportDropdown.disabled = !hasSheet;
+      filterCard.style.display = hasSheet ? 'block' : 'none';
+    }
+    
+    // Función para cargar datos de la hoja seleccionada
+    async function loadData() {
+      try {
+        showLoading();
+        
+        // Obtener los datos de la hoja
+        const response = await fetch(`/api/google-sheets/${currentSheetId}/data`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar datos');
+        }
+        
+        const result = await response.json();
+        currentData = result.data;
+        
+        // Obtener las columnas disponibles
+        const columnsResponse = await fetch(`/api/google-sheets/${currentSheetId}/data/columns`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!columnsResponse.ok) {
+          throw new Error('Error al cargar columnas');
+        }
+        
+        const columnsResult = await columnsResponse.json();
+        availableColumns = columnsResult.columns;
+        
+        // Actualizar filtros con las nuevas columnas
+        updateFilterOptions();
+        
+        // Mostrar los datos
+        displayData(currentData);
+      } catch (error) {
+        console.error('Error:', error);
+        showToast(error.message, 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    // Función para mostrar los datos en la tabla
+    function displayData(data) {
+      if (!data || data.length === 0) {
+        showNoDataMessage();
+        return;
+      }
+      
+      hideNoDataMessage();
+      resultCount.textContent = data.length;
+      
+      // Crear encabezados de tabla
+      const headers = Object.keys(data[0]);
+      let headerRow = '<tr>';
+      headers.forEach(header => {
+        headerRow += `<th>${header}</th>`;
+      });
+      headerRow += '</tr>';
+      tableHeader.innerHTML = headerRow;
+      
+      // Crear filas de datos
+      let rows = '';
+      data.forEach(item => {
+        let row = '<tr>';
+        headers.forEach(header => {
+          const value = item[header] || '';
+          row += `<td>${value}</td>`;
+        });
+        row += '</tr>';
+        rows += row;
+      });
+      tableBody.innerHTML = rows;
+      
+      // Mostrar la tarjeta de resultados
+      resultsCard.style.display = 'block';
+      
+      // Inicializar DataTables
+      if (dataTable) {
+        dataTable.destroy();
+      }
+      
+      dataTable = new DataTable('#dataTable', {
+        language: {
+          url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+        },
+        responsive: true,
+        pageLength: 25
+      });
+    }
+    
+    // Función para agregar un nuevo filtro
+    function addFilter() {
+      const filterDiv = document.createElement('div');
+      filterDiv.className = 'row g-3 align-items-center mb-2 filter-row';
+      
+      const filterIndex = document.querySelectorAll('.filter-row').length + 1;
+      
+      filterDiv.innerHTML = `
+        <div class="col-md-4">
+          <select class="form-select filter-field" data-index="${filterIndex}">
+            <option value="">Selecciona un campo</option>
+            ${availableColumns.map(column => `<option value="${column}">${column}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select class="form-select filter-operator" data-index="${filterIndex}">
+            <option value="contains">Contiene</option>
+            <option value="equals">Igual a</option>
+            <option value="startsWith">Comienza con</option>
+            <option value="endsWith">Termina con</option>
+            <option value="greaterThan">Mayor que</option>
+            <option value="lessThan">Menor que</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="text" class="form-control filter-value" data-index="${filterIndex}" placeholder="Valor">
+        </div>
+        <div class="col-md-1">
+          <button type="button" class="btn btn-outline-danger remove-filter">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `;
+      
+      filtersContainer.appendChild(filterDiv);
+      
+      // Agregar evento para eliminar filtro
+      filterDiv.querySelector('.remove-filter').addEventListener('click', function() {
+        filtersContainer.removeChild(filterDiv);
+      });
+    }
+    
+    // Función para actualizar las opciones de filtros con las columnas disponibles
+    function updateFilterOptions() {
+      const filterFields = document.querySelectorAll('.filter-field');
+      
+      filterFields.forEach(select => {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Selecciona un campo</option>';
+        
+        availableColumns.forEach(column => {
+          const option = document.createElement('option');
+          option.value = column;
+          option.textContent = column;
+          if (column === currentValue) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+      });
+      
+      // Si no hay filtros, agregar uno por defecto
+      if (filterFields.length === 0 && availableColumns.length > 0) {
+        addFilter();
+      }
+    }
+    
+    // Función para limpiar todos los filtros
+    function clearFilters() {
+      filtersContainer.innerHTML = '';
+      if (availableColumns.length > 0) {
+        addFilter();
+      }
+      
+      // Mostrar todos los datos sin filtrar
+      if (currentData.length > 0) {
+        displayData(currentData);
+      }
+    }
+    
+    // Función para buscar datos según los filtros
+    async function searchData() {
+      try {
+        // Recopilar filtros
+        const filters = [];
+        const filterRows = document.querySelectorAll('.filter-row');
+        
+        filterRows.forEach(row => {
+          const field = row.querySelector('.filter-field').value;
+          const operator = row.querySelector('.filter-operator').value;
+          const value = row.querySelector('.filter-value').value;
+          
+          if (field && value) {
+            filters.push({ field, operator, value });
+          }
+        });
+        
+        if (filters.length === 0) {
+          // Si no hay filtros válidos, mostrar todos los datos
+          displayData(currentData);
+          return;
+        }
+        
+        showLoading();
+        
+        // Realizar búsqueda con filtros
+        const response = await fetch(`/api/google-sheets/${currentSheetId}/data/search`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            filters,
+            matchAll: matchAllFilters.checked
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al buscar datos');
+        }
+        
+        const result = await response.json();
+        
+        // Mostrar resultados filtrados
+        displayData(result.data);
+      } catch (error) {
+        console.error('Error:', error);
+        showToast(error.message, 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    // Función para exportar datos
+    function exportData(format) {
+      // Construir la URL para la exportación
+      const exportUrl = `/api/google-sheets/${currentSheetId}/export?format=${format}&filename=export-${Date.now()}`;
+      
+      // Abrir la URL en una nueva pestaña
+      window.open(exportUrl, '_blank');
+    }
+    
+    // Funciones auxiliares
+    function showLoading() {
+      loadingSpinner.style.display = 'block';
+      resultsCard.style.display = 'none';
+    }
+    
+    function hideLoading() {
+      loadingSpinner.style.display = 'none';
+    }
+    
+    function showNoDataMessage() {
+      noDataMessage.style.display = 'block';
+      resultsCard.style.display = 'block';
+      tableHeader.innerHTML = '';
+      tableBody.innerHTML = '';
+      resultCount.textContent = '0';
+    }
+    
+    function hideNoDataMessage() {
+      noDataMessage.style.display = 'none';
+    }
+    
+    function hideResults() {
+      resultsCard.style.display = 'none';
+      filterCard.style.display = 'none';
+    }
+    
+    function showToast(message, type) {
+      const toastContainer = document.querySelector('.toast-container');
+      
+      const toastElement = document.createElement('div');
+      toastElement.className = `toast bg-${type} text-white`;
+      toastElement.setAttribute('role', 'alert');
+      toastElement.setAttribute('aria-live', 'assertive');
+      toastElement.setAttribute('aria-atomic', 'true');
+      
+      toastElement.innerHTML = `
+        <div class="toast-header bg-${type} text-white">
+          <strong class="me-auto">Notificación</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          ${message}
+        </div>
+      `;
+      
+      toastContainer.appendChild(toastElement);
+      
+      const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+      toast.show();
+      
+      // Eliminar toast del DOM después de ocultarse
+      toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+      });
+    }
+  });
+</script> 

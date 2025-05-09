@@ -1,0 +1,497 @@
+<div class="container-fluid">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Gestión de Usuarios de WhatsApp</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newUserModal">
+      <i class="fas fa-plus"></i> Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="card">
+    <div class="card-header bg-light">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Usuarios Registrados</h5>
+        <div class="input-group w-25">
+          <input type="text" class="form-control" id="searchInput" placeholder="Buscar...">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="usersTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Número</th>
+              <th>Nombre</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Válido hasta</th>
+              <th>Mensajes hoy</th>
+              <th>Último mensaje</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Los datos se cargarán dinámicamente con JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      <div id="loadingSpinner" class="text-center p-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Cargando usuarios...</p>
+      </div>
+      <div id="noDataMessage" class="text-center p-4" style="display: none;">
+        <i class="fas fa-users fa-4x text-muted mb-3"></i>
+        <h5>No hay usuarios registrados</h5>
+        <p class="text-muted">Crea un nuevo usuario para empezar</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <div class="d-flex justify-content-between mt-3 align-items-center">
+    <div class="pagination-info"></div>
+    <ul class="pagination" id="pagination"></ul>
+  </div>
+
+  <!-- Modal de nuevo usuario -->
+  <div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newUserModalLabel">Nuevo Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="newUserForm">
+            <div class="mb-3">
+              <label for="phoneNumber" class="form-label">Número de teléfono</label>
+              <input type="text" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="52xxxxxxxxxx" required>
+              <small class="form-text text-muted">Formato: código de país + número sin guiones ni espacios</small>
+            </div>
+            <div class="mb-3">
+              <label for="name" class="form-label">Nombre de usuario</label>
+              <input type="text" class="form-control" id="name" name="name">
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email">
+            </div>
+            <div class="mb-3">
+              <label for="roleId" class="form-label">Rol</label>
+              <select class="form-select" id="roleId" name="roleId" required>
+                <!-- Los roles se cargarán dinámicamente con JavaScript -->
+                <option value="">Cargando roles...</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="validUntil" class="form-label">Válido hasta</label>
+              <input type="date" class="form-control" id="validUntil" name="validUntil">
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="isActive" name="isActive" checked>
+              <label class="form-check-label" for="isActive">Usuario activo</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="saveUserBtn">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de editar usuario -->
+  <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUserModalLabel">Editar Usuario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editUserForm">
+            <input type="hidden" id="editUserId" name="id">
+            <div class="mb-3">
+              <label for="editPhoneNumber" class="form-label">Número de teléfono</label>
+              <input type="text" class="form-control" id="editPhoneNumber" name="phoneNumber" placeholder="52xxxxxxxxxx" required>
+              <small class="form-text text-muted">Formato: código de país + número sin guiones ni espacios</small>
+            </div>
+            <div class="mb-3">
+              <label for="editName" class="form-label">Nombre de usuario</label>
+              <input type="text" class="form-control" id="editName" name="name">
+            </div>
+            <div class="mb-3">
+              <label for="editEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="editEmail" name="email">
+            </div>
+            <div class="mb-3">
+              <label for="editRoleId" class="form-label">Rol</label>
+              <select class="form-select" id="editRoleId" name="roleId" required>
+                <!-- Los roles se cargarán dinámicamente con JavaScript -->
+                <option value="">Cargando roles...</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="editValidUntil" class="form-label">Válido hasta</label>
+              <input type="date" class="form-control" id="editValidUntil" name="validUntil">
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" class="form-check-input" id="editIsActive" name="isActive">
+              <label class="form-check-label" for="editIsActive">Usuario activo</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="updateUserBtn">Actualizar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Referencias a elementos
+    const usersTable = document.getElementById('usersTable');
+    const usersTableBody = usersTable.querySelector('tbody');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const noDataMessage = document.getElementById('noDataMessage');
+    const searchInput = document.getElementById('searchInput');
+    const newUserForm = document.getElementById('newUserForm');
+    const editUserForm = document.getElementById('editUserForm');
+    const saveUserBtn = document.getElementById('saveUserBtn');
+    const updateUserBtn = document.getElementById('updateUserBtn');
+    const roleIdSelect = document.getElementById('roleId');
+    const editRoleIdSelect = document.getElementById('editRoleId');
+    
+    let users = [];
+    let filteredUsers = [];
+    let roles = []; // Array para almacenar los roles
+    
+    // Cargar usuarios y roles al iniciar
+    loadUsers();
+    loadRoles();
+    
+    searchInput.addEventListener('input', filterUsers);
+    saveUserBtn.addEventListener('click', saveUser);
+    updateUserBtn.addEventListener('click', updateUser);
+    
+    // Función para cargar los roles de WhatsApp
+    async function loadRoles() {
+      try {
+        const response = await fetch('/api/whatsapp-users/roles', {
+          credentials: 'include'
+        });
+        const result = await response.json();
+        
+        // Diferentes posibles estructuras de respuesta
+        let rolesData = [];
+        
+        if (result.success && result.data) {
+          // Formato estándar de la API
+          rolesData = result.data;
+        } else if (Array.isArray(result)) {
+          // Por si la API devuelve directamente un array
+          rolesData = result;
+        } else if (result.roles) {
+          // Otro formato posible
+          rolesData = result.roles;
+        } else {
+          console.error('Formato de roles desconocido:', result);
+          roleIdSelect.innerHTML = '<option value="">Error: Formato de roles desconocido</option>';
+          editRoleIdSelect.innerHTML = '<option value="">Error: Formato de roles desconocido</option>';
+          return;
+        }
+        
+        if (rolesData.length === 0) {
+          console.warn('No se encontraron roles');
+          roleIdSelect.innerHTML = '<option value="">No hay roles disponibles</option>';
+          editRoleIdSelect.innerHTML = '<option value="">No hay roles disponibles</option>';
+          return;
+        }
+        
+        // Limpiar los selects
+        roleIdSelect.innerHTML = '';
+        editRoleIdSelect.innerHTML = '';
+        
+        // Agregar los roles a los selects
+        rolesData.forEach(role => {
+          const option = document.createElement('option');
+          option.value = role.id;
+          // Manejar diferentes formatos de nombre de rol
+          option.textContent = `${role.name || role.roleName || role.role_name} - ${role.description || role.desc || 'Sin descripción'}`;
+          
+          const optionClone = option.cloneNode(true);
+          
+          roleIdSelect.appendChild(option);
+          editRoleIdSelect.appendChild(optionClone);
+        });
+      } catch (error) {
+        console.error('Error en la solicitud de roles:', error);
+        roleIdSelect.innerHTML = '<option value="">Error de conexión al cargar roles</option>';
+        editRoleIdSelect.innerHTML = '<option value="">Error de conexión al cargar roles</option>';
+        
+        // Plan de contingencia: crear roles estáticos si la API falla
+        const fallbackRoles = [
+          { id: 1, name: "Básico", description: "Acceso básico" },
+          { id: 2, name: "Estándar", description: "Acceso estándar" },
+          { id: 3, name: "Premium", description: "Acceso premium" },
+          { id: 4, name: "Admin", description: "Acceso administrativo" }
+        ];
+        
+        // Preguntar al usuario si desea usar roles predeterminados
+        if (confirm('Error al cargar roles desde el servidor. ¿Desea usar roles predeterminados?')) {
+          roleIdSelect.innerHTML = '';
+          editRoleIdSelect.innerHTML = '';
+          
+          fallbackRoles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role.id;
+            option.textContent = `${role.name} - ${role.description}`;
+            
+            const optionClone = option.cloneNode(true);
+            
+            roleIdSelect.appendChild(option);
+            editRoleIdSelect.appendChild(optionClone);
+          });
+        }
+      }
+    }
+    
+    async function loadUsers() {
+      loadingSpinner.style.display = 'block';
+      usersTableBody.innerHTML = '';
+      noDataMessage.style.display = 'none';
+      
+      try {
+        const response = await fetch('/api/whatsapp-users', {
+          credentials: 'include'
+        });
+        const result = await response.json();
+        
+        if (result.success && result.data) { 
+          users = result.data;
+          filteredUsers = [...users];
+          renderUsers();
+        } else {
+          console.error('Error en la respuesta del servidor al cargar usuarios:', result.message || 'Formato de respuesta inesperado');
+          showNoData(result.message || 'No se pudieron cargar los usuarios.');
+        }
+      } catch (error) { 
+        console.error('Error cargando usuarios:', error);
+        showNoData('Error al cargar los datos. Intenta de nuevo más tarde.');
+      } finally {
+        loadingSpinner.style.display = 'none';
+      }
+    }
+    
+    function filterUsers() {
+      const searchTerm = searchInput.value.toLowerCase();
+      filteredUsers = users.filter(user => {
+        return (
+          user.phone_number?.toLowerCase().includes(searchTerm) ||
+          (user.user_name || user.name)?.toLowerCase().includes(searchTerm) ||
+          user.email?.toLowerCase().includes(searchTerm) ||
+          user.role_name?.toLowerCase().includes(searchTerm)
+        );
+      });
+      renderUsers();
+    }
+    
+    function renderUsers() {
+      usersTableBody.innerHTML = '';
+      if (filteredUsers.length === 0 && searchInput.value) {
+        showNoData('No hay usuarios que coincidan con la búsqueda.');
+        return;
+      } else if (filteredUsers.length === 0) {
+        showNoData('No hay usuarios registrados o no se pudieron cargar.');
+        return;
+      }
+      noDataMessage.style.display = 'none';
+      filteredUsers.forEach(user => {
+        const tr = document.createElement('tr');
+        let validUntil = user.valid_until ? new Date(user.valid_until).toLocaleDateString() : '-';
+        let lastMessageDate = user.last_message_date ? new Date(user.last_message_date).toLocaleDateString() : '-';
+        tr.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.phone_number}</td>
+          <td>${user.user_name || user.name || '-'}</td>
+          <td><span class="badge bg-${getRoleBadgeColor(user.role_name)}">${user.role_name || 'básico'}</span></td>
+          <td>${user.is_active ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>'}</td>
+          <td>${validUntil}</td>
+          <td>${user.daily_message_count || 0}</td>
+          <td>${lastMessageDate}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${user.id}" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger delete-btn ms-1" data-id="${user.id}" data-name="${user.user_name || user.name || user.phone_number}" title="Eliminar">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        `;
+        usersTableBody.appendChild(tr);
+      });
+    }
+    
+    function getRoleBadgeColor(roleName) {
+      if (!roleName) return 'secondary';
+      switch(roleName.toLowerCase()) {
+        case 'admin': case 'administrador': return 'danger';
+        case 'premium': return 'primary';
+        case 'estándar': case 'standard': return 'success';
+        case 'básico': case 'basic': return 'info';
+        default: return 'secondary';
+      }
+    }
+    
+    function showNoData(message = 'No hay usuarios que coincidan con la búsqueda') {
+      noDataMessage.querySelector('h5').textContent = message;
+      noDataMessage.style.display = 'block';
+    }
+    
+    async function saveUser() {
+      const formData = new FormData(newUserForm);
+      const userData = {
+        phoneNumber: formData.get('phoneNumber'),
+        name: formData.get('name'),
+        email: formData.get('email'),
+        roleId: parseInt(formData.get('roleId')),
+        validUntil: formData.get('validUntil') || null,
+        isActive: formData.get('isActive') === 'on'
+      };
+      try {
+        const response = await fetch('/api/whatsapp-users', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData),
+          credentials: 'include'
+        });
+        const result = await response.json();
+        if (result.success) {
+          const modalElement = document.getElementById('newUserModal');
+          if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+            modal.hide();
+          }
+          newUserForm.reset();
+          alert('Usuario creado exitosamente');
+          loadUsers();
+        } else {
+          alert('Error: ' + (result.message || 'No se pudo crear el usuario'));
+        }
+      } catch (error) {
+        console.error('Error guardando usuario:', error);
+        alert('Error al guardar el usuario. Intenta de nuevo más tarde.');
+      }
+    }
+    
+    function openEditModal(userId) {
+      const user = users.find(u => u.id === parseInt(userId));
+      if (!user) return;
+      document.getElementById('editUserId').value = user.id;
+      document.getElementById('editPhoneNumber').value = user.phone_number;
+      document.getElementById('editName').value = user.user_name || user.name || '';
+      document.getElementById('editEmail').value = user.email || '';
+      document.getElementById('editRoleId').value = user.role_id;
+      if (user.valid_until) {
+        const date = new Date(user.valid_until);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        document.getElementById('editValidUntil').value = `${year}-${month}-${day}`;
+      } else {
+        document.getElementById('editValidUntil').value = '';
+      }
+      document.getElementById('editIsActive').checked = user.is_active;
+      const editModalElement = document.getElementById('editUserModal');
+      if (editModalElement) {
+        const editModal = new bootstrap.Modal(editModalElement);
+        editModal.show();
+      }
+    }
+    
+    async function updateUser() {
+      const formData = new FormData(editUserForm);
+      const userId = formData.get('id');
+      const userData = {
+        phoneNumber: formData.get('phoneNumber'),
+        name: formData.get('name'),
+        email: formData.get('email'),
+        roleId: parseInt(formData.get('roleId')),
+        validUntil: formData.get('validUntil') || null,
+        isActive: formData.get('isActive') === 'on'
+      };
+      try {
+        const response = await fetch(`/api/whatsapp-users/${userId}`, { 
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData),
+          credentials: 'include'
+        });
+        const result = await response.json();
+        if (result.success) {
+          const modalElement = document.getElementById('editUserModal');
+          if (modalElement) {
+             const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+             modal.hide();
+          }
+          alert('Usuario actualizado exitosamente');
+          loadUsers();
+        } else {
+          alert('Error: ' + (result.message || 'No se pudo actualizar el usuario'));
+        }
+      } catch (error) {
+        console.error('Error actualizando usuario:', error);
+        alert('Error al actualizar el usuario. Intenta de nuevo más tarde.');
+      }
+    }
+
+    async function handleDeleteUser(userId, userName) {
+      if (!confirm(`¿Estás seguro de que quieres eliminar al usuario "${userName}" (ID: ${userId})? Esta acción no se puede deshacer.`)) {
+        return;
+      }
+      try {
+        const response = await fetch(`/api/whatsapp-users/${userId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert('Usuario eliminado exitosamente.');
+          loadUsers();
+        } else {
+          alert('Error al eliminar: ' + (result.message || 'No se pudo eliminar el usuario.'));
+        }
+      } catch (error) {
+        console.error('Error eliminando usuario:', error);
+        alert('Error crítico al eliminar el usuario. Revisa la consola.');
+      }
+    }
+
+    usersTableBody.addEventListener('click', function(event) {
+      const editButton = event.target.closest('.edit-btn');
+      const deleteButton = event.target.closest('.delete-btn');
+      if (editButton) {
+        event.preventDefault();
+        const userId = editButton.dataset.id;
+        openEditModal(userId);
+      }
+      if (deleteButton) {
+        event.preventDefault();
+        const userId = deleteButton.dataset.id;
+        const userName = deleteButton.dataset.name;
+        handleDeleteUser(userId, userName);
+      }
+    });
+
+  });
+</script> 

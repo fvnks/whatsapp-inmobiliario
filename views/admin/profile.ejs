@@ -1,0 +1,327 @@
+<div class="container-fluid">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Mi Perfil</h2>
+  </div>
+
+  <div class="row">
+    <!-- Columna de información del perfil -->
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Información del Perfil</h5>
+        </div>
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <div class="user-avatar mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2.5rem;">
+              <%= userData.username.charAt(0).toUpperCase() %>
+            </div>
+            <h4><%= userData.full_name %></h4>
+            <span class="badge bg-primary"><%= userData.role_name %></span>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted">Nombre de usuario</div>
+            <div class="col-sm-8"><%= userData.username %></div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted">Correo electrónico</div>
+            <div class="col-sm-8"><%= userData.email %></div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted">Último acceso</div>
+            <div class="col-sm-8">
+              <% if (userData.last_login) { %>
+                <%= new Date(userData.last_login).toLocaleString('es-ES', { 
+                  dateStyle: 'medium', 
+                  timeStyle: 'short' 
+                }) %>
+              <% } else { %>
+                No disponible
+              <% } %>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-sm-4 text-muted">Fecha de creación</div>
+            <div class="col-sm-8">
+              <%= new Date(userData.created_at).toLocaleString('es-ES', { 
+                dateStyle: 'medium', 
+                timeStyle: 'short' 
+              }) %>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tarjeta de permisos -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Permisos</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <% permissions.forEach(permission => { %>
+              <div class="col-md-6 mb-2">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-check-circle text-success me-2"></i>
+                  <div>
+                    <div><%= permission.name %></div>
+                    <small class="text-muted"><%= permission.description %></small>
+                  </div>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Columna de cambio de contraseña -->
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Cambiar Contraseña</h5>
+        </div>
+        <div class="card-body">
+          <!-- Alerta de éxito (oculta por defecto) -->
+          <div class="alert alert-success d-none" id="successAlert" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span id="successMessage">Contraseña actualizada exitosamente.</span>
+          </div>
+          
+          <!-- Alerta de error (oculta por defecto) -->
+          <div class="alert alert-danger d-none" id="errorAlert" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span id="errorMessage">Error al cambiar la contraseña.</span>
+          </div>
+
+          <form id="changePasswordForm">
+            <div class="mb-3 position-relative">
+              <label for="currentPassword" class="form-label">Contraseña Actual</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="currentPassword" required>
+                <button class="btn btn-outline-secondary password-toggle" type="button" data-target="currentPassword">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div class="invalid-feedback">Por favor ingresa tu contraseña actual.</div>
+            </div>
+            
+            <div class="mb-3 position-relative">
+              <label for="newPassword" class="form-label">Nueva Contraseña</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="newPassword" minlength="6" required>
+                <button class="btn btn-outline-secondary password-toggle" type="button" data-target="newPassword">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres.</div>
+            </div>
+            
+            <div class="mb-4 position-relative">
+              <label for="confirmPassword" class="form-label">Confirmar Nueva Contraseña</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="confirmPassword" required>
+                <button class="btn btn-outline-secondary password-toggle" type="button" data-target="confirmPassword">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <div class="invalid-feedback">Las contraseñas no coinciden.</div>
+            </div>
+            
+            <div class="password-strength mb-4" id="passwordStrength">
+              <label class="form-label">Seguridad de la Contraseña</label>
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <small class="text-muted mt-1 d-block">Usa al menos 8 caracteres, combinando letras mayúsculas, minúsculas, números y símbolos.</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" id="submitButton">
+              <span id="buttonText">Cambiar Contraseña</span>
+              <span id="loadingSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Tarjeta de consejos de seguridad -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Consejos de Seguridad</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            <li class="mb-2">
+              <i class="fas fa-shield-alt text-primary me-2"></i>
+              <span>Utiliza contraseñas diferentes para cada servicio.</span>
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-fingerprint text-primary me-2"></i>
+              <span>Nunca compartas tus credenciales con nadie.</span>
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-redo-alt text-primary me-2"></i>
+              <span>Cambia tu contraseña regularmente.</span>
+            </li>
+            <li class="mb-2">
+              <i class="fas fa-user-lock text-primary me-2"></i>
+              <span>Evita usar la misma contraseña para servicios diferentes.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del formulario
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const currentPassword = document.getElementById('currentPassword');
+    const newPassword = document.getElementById('newPassword');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const successAlert = document.getElementById('successAlert');
+    const successMessage = document.getElementById('successMessage');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const submitButton = document.getElementById('submitButton');
+    const buttonText = document.getElementById('buttonText');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+    
+    // Elementos de seguridad de contraseña
+    const passwordStrengthBar = document.querySelector('#passwordStrength .progress-bar');
+    
+    // Eventos de mostrar/ocultar contraseñas
+    passwordToggles.forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        const inputElement = document.getElementById(targetId);
+        const icon = this.querySelector('i');
+        
+        if (inputElement.type === 'password') {
+          inputElement.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        } else {
+          inputElement.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
+      });
+    });
+    
+    // Validación de coincidencia de contraseñas
+    confirmPassword.addEventListener('input', function() {
+      if (newPassword.value !== this.value) {
+        this.setCustomValidity('Las contraseñas no coinciden');
+      } else {
+        this.setCustomValidity('');
+      }
+    });
+    
+    // Cálculo de fortaleza de contraseña
+    newPassword.addEventListener('input', function() {
+      const password = this.value;
+      let strength = 0;
+      
+      // Criterios de seguridad
+      if (password.length >= 8) strength += 20;
+      if (password.match(/[a-z]+/)) strength += 20;
+      if (password.match(/[A-Z]+/)) strength += 20;
+      if (password.match(/[0-9]+/)) strength += 20;
+      if (password.match(/[^a-zA-Z0-9]+/)) strength += 20;
+      
+      // Actualizar la barra de progreso
+      passwordStrengthBar.style.width = `${strength}%`;
+      
+      // Cambiar el color según la fortaleza
+      if (strength <= 40) {
+        passwordStrengthBar.className = 'progress-bar bg-danger';
+      } else if (strength <= 70) {
+        passwordStrengthBar.className = 'progress-bar bg-warning';
+      } else {
+        passwordStrengthBar.className = 'progress-bar bg-success';
+      }
+      
+      // Actualizar el ARIA para accesibilidad
+      passwordStrengthBar.setAttribute('aria-valuenow', strength);
+      
+      // Validar que la nueva contraseña coincida con la confirmación
+      if (confirmPassword.value) {
+        if (password !== confirmPassword.value) {
+          confirmPassword.setCustomValidity('Las contraseñas no coinciden');
+        } else {
+          confirmPassword.setCustomValidity('');
+        }
+      }
+    });
+    
+    // Envío del formulario
+    changePasswordForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Validación del formulario
+      if (!this.checkValidity()) {
+        e.stopPropagation();
+        this.classList.add('was-validated');
+        return;
+      }
+      
+      // Ocultar alertas previas
+      successAlert.classList.add('d-none');
+      errorAlert.classList.add('d-none');
+      
+      // Mostrar estado de carga
+      submitButton.disabled = true;
+      buttonText.textContent = 'Cambiando contraseña...';
+      loadingSpinner.classList.remove('d-none');
+      
+      try {
+        const response = await fetch('/api/auth/change-password', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            currentPassword: currentPassword.value,
+            newPassword: newPassword.value
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Mostrar mensaje de éxito
+          successMessage.textContent = data.message || 'Contraseña actualizada exitosamente.';
+          successAlert.classList.remove('d-none');
+          
+          // Limpiar el formulario
+          changePasswordForm.reset();
+          changePasswordForm.classList.remove('was-validated');
+          passwordStrengthBar.style.width = '0%';
+          passwordStrengthBar.className = 'progress-bar';
+        } else {
+          // Mostrar mensaje de error
+          errorMessage.textContent = data.error?.message || 'Error al cambiar la contraseña.';
+          errorAlert.classList.remove('d-none');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        errorMessage.textContent = 'Error de conexión. Por favor, inténtalo de nuevo.';
+        errorAlert.classList.remove('d-none');
+      } finally {
+        // Restaurar botón
+        submitButton.disabled = false;
+        buttonText.textContent = 'Cambiar Contraseña';
+        loadingSpinner.classList.add('d-none');
+      }
+    });
+  });
+</script> 

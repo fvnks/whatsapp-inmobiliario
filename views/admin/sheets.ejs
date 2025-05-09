@@ -1,0 +1,546 @@
+<div class="container-fluid">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Gestión de Google Sheets</h2>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSheetModal">
+      <i class="fas fa-plus"></i> Nueva Conexión
+    </button>
+  </div>
+
+  <!-- Tabla de Google Sheets -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="sheetsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>ID de Google Sheet</th>
+              <th>Descripción</th>
+              <th>Rango</th>
+              <th>Estado</th>
+              <th>Fecha de creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="sheetsTableBody">
+            <!-- La tabla se llenará con JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información sobre Google Sheets API -->
+  <div class="card mt-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0">Cómo obtener y compartir un ID de Google Sheet</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h6><i class="fas fa-key text-primary me-2"></i>Obtener el ID de una hoja</h6>
+          <p>El ID de una hoja de Google se encuentra en la URL cuando la abres:</p>
+          <p class="text-muted small">https://docs.google.com/spreadsheets/d/<span class="text-danger fw-bold">ESTE-ES-EL-ID-DE-LA-HOJA</span>/edit</p>
+          <div class="alert alert-light border">
+            <p class="mb-0"><strong>Ejemplo:</strong> En la URL:</p>
+            <p class="mb-0 text-break small">https://docs.google.com/spreadsheets/d/1H8wonTkMb3WNANCiASqqTCL7_o-ks2py_RlUPGy6AfM/edit</p>
+            <p class="mb-0">El ID es: <code>1H8wonTkMb3WNANCiASqqTCL7_o-ks2py_RlUPGy6AfM</code></p>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <h6><i class="fas fa-share-alt text-success me-2"></i>Compartir la hoja con la cuenta de servicio</h6>
+          <p>Para que el bot pueda acceder a tu hoja, debes compartirla con la cuenta de servicio:</p>
+          <div class="alert alert-warning">
+            <p class="mb-1">1. Abre tu hoja en Google Sheets</p>
+            <p class="mb-1">2. Haz clic en el botón <strong>Compartir</strong> en la esquina superior derecha</p>
+            <p class="mb-1">3. En el campo "Añadir personas y grupos", introduce la dirección de email de la cuenta de servicio:</p>
+            <p class="mb-0"><code id="serviceAccountEmail" class="user-select-all">telegram-bot@gen-lang-client-0621878737.iam.gserviceaccount.com</code>
+              <button class="btn btn-sm btn-light ms-2" onclick="copyServiceEmail()">
+                <i class="fas fa-copy"></i>
+              </button>
+            </p>
+            <p class="mb-1 mt-2">4. Selecciona el rol <strong>Editor</strong></p>
+            <p class="mb-0">5. Haz clic en <strong>Enviar</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Agregar Google Sheet -->
+  <div class="modal fade" id="addSheetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Nueva Conexión de Google Sheet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addSheetForm">
+            <div class="mb-3">
+              <label for="sheetId" class="form-label">ID de Google Sheet</label>
+              <input type="text" class="form-control" id="sheetId" name="sheetId" required>
+              <div class="form-text">El ID se encuentra en la URL de la hoja</div>
+            </div>
+            <div class="mb-3">
+              <label for="name" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Descripción</label>
+              <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="range" class="form-label">Rango</label>
+              <input type="text" class="form-control" id="range" name="range" value="A:Z">
+              <div class="form-text">Ejemplo: A:Z (todas las columnas) o A1:Z100 (rango específico)</div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
+                <label class="form-check-label" for="isActive">Activar esta conexión</label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-success" id="validateSheetBtn">
+            <span id="validateBtnText">Validar y Guardar</span>
+            <span id="validateSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Editar Google Sheet -->
+  <div class="modal fade" id="editSheetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Conexión de Google Sheet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editSheetForm">
+            <input type="hidden" id="editSheetDbId">
+            <div class="mb-3">
+              <label for="editSheetId" class="form-label">ID de Google Sheet</label>
+              <input type="text" class="form-control" id="editSheetId" name="sheetId" required>
+            </div>
+            <div class="mb-3">
+              <label for="editName" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="editName" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="editDescription" class="form-label">Descripción</label>
+              <textarea class="form-control" id="editDescription" name="description" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="editRange" class="form-label">Rango</label>
+              <input type="text" class="form-control" id="editRange" name="range">
+            </div>
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="editIsActive" name="isActive" checked>
+                <label class="form-check-label" for="editIsActive">Conexión activa</label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="updateSheetBtn">
+            <span id="updateBtnText">Actualizar</span>
+            <span id="updateSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación para Eliminar -->
+  <div class="modal fade" id="deleteSheetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar Eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar la conexión con <span id="deleteSheetName" class="fw-bold"></span>?</p>
+          <p class="text-danger">Esta acción no se puede deshacer y puede afectar al funcionamiento del bot si estaba utilizando esta hoja.</p>
+          <input type="hidden" id="deleteSheetId">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteSheetBtn">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-5 mb-3 text-center text-muted">
+    <p>&copy; <%= new Date().getFullYear() %> WhatsApp Property Bot</p>
+  </footer>
+</div>
+
+<!-- Scripts específicos de la página -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // DataTable para la tabla de Google Sheets
+    let sheetsTable = new DataTable('#sheetsTable', {
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+      },
+      columns: [
+        { data: 'id' },
+        { data: 'name' },
+        { data: 'sheet_id' },
+        { data: 'description' },
+        { data: 'range' },
+        { data: 'is_active' },
+        { data: 'created_at' },
+        { data: 'actions', orderable: false, searchable: false }
+      ]
+    });
+
+    // Cargar hojas de Google Sheets
+    loadGoogleSheets();
+
+    // Evento para validar y guardar nueva hoja
+    document.getElementById('validateSheetBtn').addEventListener('click', validateAndSaveSheet);
+
+    // Evento para actualizar hoja
+    document.getElementById('updateSheetBtn').addEventListener('click', updateSheet);
+
+    // Evento para confirmar eliminación
+    document.getElementById('confirmDeleteSheetBtn').addEventListener('click', deleteSheet);
+
+    // Función para cargar hojas de Google Sheets
+    async function loadGoogleSheets() {
+      try {
+        const response = await fetch('/api/google-sheets', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar hojas de Google');
+        }
+        
+        const data = await response.json();
+        
+        // Limpiar y llenar la tabla
+        sheetsTable.clear();
+        
+        data.forEach(sheet => {
+          sheetsTable.row.add({
+            id: sheet.id,
+            name: sheet.name,
+            sheet_id: `<span class="text-break" style="max-width: 200px; display: inline-block;">${sheet.sheet_id}</span>`,
+            description: sheet.description || '-',
+            range: sheet.range || 'A:Z',
+            is_active: sheet.is_active ? 
+              '<span class="badge bg-success">Activa</span>' : 
+              '<span class="badge bg-danger">Inactiva</span>',
+            created_at: new Date(sheet.created_at).toLocaleString('es-ES'),
+            actions: `
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-primary btn-edit" data-id="${sheet.id}" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-info btn-view" data-id="${sheet.id}" data-sheet-id="${sheet.sheet_id}" title="Ver en Google Sheets">
+                  <i class="fas fa-external-link-alt"></i>
+                </button>
+                <button class="btn btn-danger btn-delete" data-id="${sheet.id}" data-name="${sheet.name}" title="Eliminar">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            `
+          });
+        });
+        
+        sheetsTable.draw();
+        
+        // Agregar eventos a los botones de acciones
+        document.querySelectorAll('.btn-edit').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const sheetId = e.currentTarget.getAttribute('data-id');
+            editSheet(sheetId);
+          });
+        });
+        
+        document.querySelectorAll('.btn-view').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const googleSheetId = e.currentTarget.getAttribute('data-sheet-id');
+            window.open(`https://docs.google.com/spreadsheets/d/${googleSheetId}/edit`, '_blank');
+          });
+        });
+        
+        document.querySelectorAll('.btn-delete').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const sheetId = e.currentTarget.getAttribute('data-id');
+            const sheetName = e.currentTarget.getAttribute('data-name');
+            document.getElementById('deleteSheetId').value = sheetId;
+            document.getElementById('deleteSheetName').textContent = sheetName;
+            new bootstrap.Modal(document.getElementById('deleteSheetModal')).show();
+          });
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al cargar hojas de Google', 'danger');
+      }
+    }
+
+    // Función para validar y guardar nueva hoja
+    async function validateAndSaveSheet() {
+      try {
+        const validateBtn = document.getElementById('validateSheetBtn');
+        const validateBtnText = document.getElementById('validateBtnText');
+        const validateSpinner = document.getElementById('validateSpinner');
+        
+        // Mostrar spinner y deshabilitar botón
+        validateBtn.disabled = true;
+        validateBtnText.textContent = 'Validando...';
+        validateSpinner.classList.remove('d-none');
+        
+        const sheetId = document.getElementById('sheetId').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const range = document.getElementById('range').value.trim() || 'A:Z';
+        const isActive = document.getElementById('isActive').checked;
+        
+        if (!sheetId || !name) {
+          showToast('Por favor completa los campos requeridos', 'warning');
+          // Restaurar botón
+          validateBtn.disabled = false;
+          validateBtnText.textContent = 'Validar y Guardar';
+          validateSpinner.classList.add('d-none');
+          return;
+        }
+        
+        // Validar el ID de la hoja
+        const response = await fetch('/api/google-sheets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            sheetId,
+            name,
+            description,
+            range,
+            isActive
+          })
+        });
+        
+        // Restaurar botón
+        validateBtn.disabled = false;
+        validateBtnText.textContent = 'Validar y Guardar';
+        validateSpinner.classList.add('d-none');
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Error al guardar la hoja');
+        }
+        
+        const result = await response.json();
+        
+        // Cerrar modal y limpiar formulario
+        bootstrap.Modal.getInstance(document.getElementById('addSheetModal')).hide();
+        document.getElementById('addSheetForm').reset();
+        document.getElementById('range').value = 'A:Z';
+        
+        // Recargar tabla de hojas
+        loadGoogleSheets();
+        
+        showToast('Hoja de Google registrada correctamente', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast(error.message, 'danger');
+      }
+    }
+
+    // Función para editar hoja
+    async function editSheet(sheetId) {
+      try {
+        const response = await fetch(`/api/google-sheets/${sheetId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar datos de la hoja');
+        }
+        
+        const sheet = await response.json();
+        
+        // Llenar formulario de edición
+        document.getElementById('editSheetDbId').value = sheet.id;
+        document.getElementById('editSheetId').value = sheet.sheet_id;
+        document.getElementById('editName').value = sheet.name;
+        document.getElementById('editDescription').value = sheet.description || '';
+        document.getElementById('editRange').value = sheet.range || 'A:Z';
+        document.getElementById('editIsActive').checked = sheet.is_active;
+        
+        // Mostrar modal
+        new bootstrap.Modal(document.getElementById('editSheetModal')).show();
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al cargar datos de la hoja', 'danger');
+      }
+    }
+
+    // Función para actualizar hoja
+    async function updateSheet() {
+      try {
+        const updateBtn = document.getElementById('updateSheetBtn');
+        const updateBtnText = document.getElementById('updateBtnText');
+        const updateSpinner = document.getElementById('updateSpinner');
+        
+        // Mostrar spinner y deshabilitar botón
+        updateBtn.disabled = true;
+        updateBtnText.textContent = 'Actualizando...';
+        updateSpinner.classList.remove('d-none');
+        
+        const sheetDbId = document.getElementById('editSheetDbId').value;
+        const sheetId = document.getElementById('editSheetId').value.trim();
+        const name = document.getElementById('editName').value.trim();
+        const description = document.getElementById('editDescription').value.trim();
+        const range = document.getElementById('editRange').value.trim() || 'A:Z';
+        const isActive = document.getElementById('editIsActive').checked;
+        
+        if (!sheetId || !name) {
+          showToast('Por favor completa los campos requeridos', 'warning');
+          // Restaurar botón
+          updateBtn.disabled = false;
+          updateBtnText.textContent = 'Actualizar';
+          updateSpinner.classList.add('d-none');
+          return;
+        }
+        
+        const response = await fetch(`/api/google-sheets/${sheetDbId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            sheetId,
+            name,
+            description,
+            range,
+            isActive
+          })
+        });
+        
+        // Restaurar botón
+        updateBtn.disabled = false;
+        updateBtnText.textContent = 'Actualizar';
+        updateSpinner.classList.add('d-none');
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Error al actualizar la hoja');
+        }
+        
+        // Cerrar modal
+        bootstrap.Modal.getInstance(document.getElementById('editSheetModal')).hide();
+        
+        // Recargar tabla de hojas
+        loadGoogleSheets();
+        
+        showToast('Hoja de Google actualizada correctamente', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast(error.message, 'danger');
+      }
+    }
+
+    // Función para eliminar hoja
+    async function deleteSheet() {
+      try {
+        const sheetId = document.getElementById('deleteSheetId').value;
+        
+        const response = await fetch(`/api/google-sheets/${sheetId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al eliminar la hoja');
+        }
+        
+        // Cerrar modal
+        bootstrap.Modal.getInstance(document.getElementById('deleteSheetModal')).hide();
+        
+        // Recargar tabla de hojas
+        loadGoogleSheets();
+        
+        showToast('Hoja de Google eliminada correctamente', 'success');
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Error al eliminar la hoja', 'danger');
+      }
+    }
+
+    // Función para mostrar toast
+    function showToast(message, type) {
+      const toastContainer = document.querySelector('.toast-container');
+      
+      const toastElement = document.createElement('div');
+      toastElement.className = `toast bg-${type} text-white`;
+      toastElement.setAttribute('role', 'alert');
+      toastElement.setAttribute('aria-live', 'assertive');
+      toastElement.setAttribute('aria-atomic', 'true');
+      
+      toastElement.innerHTML = `
+        <div class="toast-header bg-${type} text-white">
+          <strong class="me-auto">Notificación</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          ${message}
+        </div>
+      `;
+      
+      toastContainer.appendChild(toastElement);
+      
+      const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+      toast.show();
+      
+      // Eliminar toast del DOM después de ocultarse
+      toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+      });
+    }
+  });
+
+  // Función para copiar email de la cuenta de servicio
+  function copyServiceEmail() {
+    const emailElement = document.getElementById('serviceAccountEmail');
+    const email = emailElement.textContent;
+    
+    navigator.clipboard.writeText(email)
+      .then(() => {
+        // Cambiar estilo temporalmente para indicar que se copió
+        emailElement.classList.add('bg-success', 'text-white', 'p-1');
+        setTimeout(() => {
+          emailElement.classList.remove('bg-success', 'text-white', 'p-1');
+        }, 1000);
+      })
+      .catch(error => {
+        console.error('Error al copiar el email:', error);
+      });
+  }
+</script> 

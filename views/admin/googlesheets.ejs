@@ -1,0 +1,631 @@
+<div class="container-fluid">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Google Sheets API</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSheetModal">
+      <i class="fas fa-plus"></i> Nueva Conexión
+    </button>
+  </div>
+
+  <!-- Alert para mensajes -->
+  <div class="alert alert-success alert-dismissible fade d-none" id="alertMessage" role="alert">
+    <span id="alertText"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+
+  <!-- Tabla de Google Sheets -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fas fa-table me-2 text-primary"></i> Conexiones a Google Sheets</h5>
+      <button id="refreshSheetsBtn" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="sheetsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>ID de Google Sheet</th>
+              <th>Rango</th>
+              <th>Estado</th>
+              <th>Hoja de Logs Prop.</th>
+              <th>Creado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="sheetsTableBody">
+            <% if (sheets && sheets.length > 0) { %>
+              <% sheets.forEach(sheet => { %>
+                <tr>
+                  <td><%= sheet.id %></td>
+                  <td><%= sheet.name %></td>
+                  <td><span class="text-break" style="max-width: 150px; display: inline-block;"><%= sheet.sheet_id %></span></td>
+                  <td><%= sheet.range || 'A:Z' %></td>
+                  <td>
+                    <% if (sheet.is_active) { %>
+                      <span class="badge bg-success">Activa</span>
+                    <% } else { %>
+                      <span class="badge bg-danger">Inactiva</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <% if (sheet.is_property_log_sheet) { %>
+                      <span class="badge bg-info"><i class="fas fa-check-circle"></i> Designada</span>
+                    <% } else { %>
+                      -
+                    <% } %>
+                  </td>
+                  <td><%= new Date(sheet.created_at).toLocaleDateString() %></td>
+                  <td>
+                    <div class="d-flex">
+                      <button class="btn btn-sm btn-info me-1 explore-btn" data-id="<%= sheet.id %>" title="Explorar Datos (Próximamente)" disabled>
+                        <i class="fas fa-search"></i>
+                      </button>
+                      <button class="btn btn-sm btn-primary me-1 edit-btn" data-id="<%= sheet.id %>" title="Editar Conexión">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button class="btn btn-sm btn-danger delete-btn" data-id="<%= sheet.id %>" data-name="<%= sheet.name %>" title="Eliminar Conexión">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="8" class="text-center py-3">
+                  <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No hay conexiones a Google Sheets. ¡Crea una para empezar!
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección para Configuración de API Key de Gemini -->
+  <div class="card shadow-sm mt-4">
+    <div class="card-header bg-light">
+      <h5 class="mb-0"><i class="fas fa-key me-2 text-warning"></i> Configuración de API Key de Google Gemini</h5>
+    </div>
+    <div class="card-body">
+      <form id="geminiApiForm">
+        <div class="row align-items-end">
+          <div class="col-md-8">
+            <label for="geminiApiKeyInput" class="form-label">API Key de Google Gemini</label>
+            <input type="password" class="form-control" id="geminiApiKeyInput" name="gemini_api_key" placeholder="Ingresa tu API Key de Gemini">
+            <div class="form-text">La API Key se guardará de forma segura.</div>
+          </div>
+          <div class="col-md-4">
+            <button type="submit" class="btn btn-warning w-100">Guardar API Key</button>
+          </div>
+        </div>
+      </form>
+      <div class="mt-3">
+        <strong>Estado Actual:</strong> <span id="geminiApiStatus" class="fw-bold">Cargando...</span>
+        <span id="geminiApiKeyDisplay" class="ms-2 text-muted"></span>
+      </div>
+      <div class="alert alert-success alert-dismissible fade d-none mt-3" id="geminiAlertMessage" role="alert">
+        <span id="geminiAlertText"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+  <!-- Fin de Sección para Configuración de API Key de Gemini -->
+
+  <!-- Modal para Agregar Google Sheet -->
+  <div class="modal fade" id="addSheetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Nueva Conexión de Google Sheet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addSheetForm">
+            <div class="mb-3">
+              <label for="sheetId" class="form-label">ID de Google Sheet</label>
+              <input type="text" class="form-control" id="sheetId" name="sheetId" required>
+              <div class="form-text">Ejemplo: 1H8wonTkMb3WNANCiASqqTCL7_o-ks2py_RlUPGy6AfM</div>
+            </div>
+            <div class="mb-3">
+              <label for="name" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Descripción (opcional)</label>
+              <textarea class="form-control" id="description" name="description" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="range" class="form-label">Rango</label>
+              <input type="text" class="form-control" id="range" name="range" value="A:Z">
+              <div class="form-text">Formato: A:Z (todas las columnas) o A1:Z100 (rango específico)</div>
+            </div>
+            <div class="mb-3 form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
+              <label class="form-check-label" for="isActive">Conexión Activa</label>
+            </div>
+            <div class="mb-3 form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="isPropertyLogSheet" name="is_property_log_sheet">
+              <label class="form-check-label" for="isPropertyLogSheet">Usar como hoja de registro de propiedades de WhatsApp</label>
+              <div class="form-text">Solo una hoja puede estar designada. Al marcar esta, cualquier otra se desmarcará.</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="saveSheetBtn">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Editar Google Sheet -->
+  <div class="modal fade" id="editSheetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Conexión de Google Sheet</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editSheetForm">
+            <input type="hidden" id="editId">
+            <div class="mb-3">
+              <label for="editSheetId" class="form-label">ID de Google Sheet</label>
+              <input type="text" class="form-control" id="editSheetId" name="sheetId" required>
+            </div>
+            <div class="mb-3">
+              <label for="editName" class="form-label">Nombre</label>
+              <input type="text" class="form-control" id="editName" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label for="editDescription" class="form-label">Descripción</label>
+              <textarea class="form-control" id="editDescription" name="description" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="editRange" class="form-label">Rango</label>
+              <input type="text" class="form-control" id="editRange" name="range">
+            </div>
+            <div class="mb-3 form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="editStatus" name="isActive">
+                <label class="form-check-label" for="editStatus">Conexión Activa</label>
+            </div>
+            <div class="mb-3 form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="editIsPropertyLogSheet" name="is_property_log_sheet">
+              <label class="form-check-label" for="editIsPropertyLogSheet">Usar como hoja de registro de propiedades de WhatsApp</label>
+              <div class="form-text">Solo una hoja puede estar designada. Al marcar esta, cualquier otra se desmarcará.</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="updateSheetBtn">Actualizar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación para Eliminar -->
+  <div class="modal fade" id="deleteSheetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmar Eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar la conexión con <span id="deleteSheetName" class="fw-bold"></span>?</p>
+          <p class="text-danger">Esta acción no se puede deshacer.</p>
+          <input type="hidden" id="deleteId">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script para la gestión de Google Sheets -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const sheetsTableElement = document.getElementById('sheetsTable');
+    let dataTableInstance;
+    if (sheetsTableElement) {
+        dataTableInstance = new DataTable(sheetsTableElement, {
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+            },
+            columns: [
+                { data: 'id' },
+                { data: 'name' },
+                { data: 'sheet_id' },
+                { data: 'range' },
+                { data: 'is_active' },
+                { data: 'is_property_log_sheet' },
+                { data: 'created_at' },
+                { data: 'actions', orderable: false, searchable: false }
+            ],
+            columnDefs: [
+                {
+                    targets: 4,
+                    render: function (data, type, row) {
+                        return data ? '<span class="badge bg-success">Activa</span>' : '<span class="badge bg-danger">Inactiva</span>';
+                    }
+                },
+                {
+                    targets: 5,
+                    render: function (data, type, row) {
+                        return data ? '<span class="badge bg-info"><i class="fas fa-check-circle"></i> Designada</span>' : '-';
+                    }
+                },
+                {
+                    targets: 6,
+                    render: function (data, type, row) {
+                        return new Date(data).toLocaleDateString();
+                    }
+                }
+            ]
+        });
+    } else {
+        console.warn('Elemento #sheetsTable no encontrado, DataTable no inicializado.');
+    }
+
+    document.getElementById('refreshSheetsBtn').addEventListener('click', function() {
+      loadSheets();
+    });
+    
+    document.getElementById('saveSheetBtn').addEventListener('click', function() {
+      saveSheet();
+    });
+    
+    document.getElementById('updateSheetBtn').addEventListener('click', function() {
+      updateSheet();
+    });
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+      deleteSheet();
+    });
+    
+    setupActionButtons();
+
+    const geminiApiForm = document.getElementById('geminiApiForm');
+    const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
+    const geminiApiStatus = document.getElementById('geminiApiStatus');
+    const geminiApiKeyDisplay = document.getElementById('geminiApiKeyDisplay');
+    const geminiAlertMessage = document.getElementById('geminiAlertMessage');
+    const geminiAlertText = document.getElementById('geminiAlertText');
+
+    async function fetchGeminiApiKeyStatus() {
+      try {
+        const response = await fetch('/api/config/gemini-api-key', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Error obteniendo estado de API Key de Gemini');
+        }
+        const data = await response.json();
+        geminiApiStatus.textContent = data.status;
+        if (data.status === 'Configured') {
+          geminiApiStatus.classList.remove('text-danger');
+          geminiApiStatus.classList.add('text-success');
+          geminiApiKeyDisplay.textContent = `(${data.display})`;
+        } else {
+          geminiApiStatus.classList.remove('text-success');
+          geminiApiStatus.classList.add('text-danger');
+          geminiApiKeyDisplay.textContent = '';
+        }
+      } catch (error) {
+        console.error('Error fetching Gemini API Key status:', error);
+        geminiApiStatus.textContent = 'Error al cargar estado';
+        geminiApiStatus.classList.add('text-danger');
+        showGeminiAlert('danger', error.message);
+      }
+    }
+
+    geminiApiForm.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const apiKey = geminiApiKeyInput.value;
+      if (!apiKey) {
+        showGeminiAlert('warning', 'Por favor, ingresa una API Key de Gemini.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/config/gemini-api-key', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ gemini_api_key: apiKey })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          const errorMsg = result.errors ? result.errors.map(e => e.msg).join(', ') : (result.message || 'Error guardando API Key');
+          throw new Error(errorMsg);
+        }
+        
+        showGeminiAlert('success', result.message || 'API Key de Gemini guardada exitosamente.');
+        geminiApiKeyInput.value = '';
+        fetchGeminiApiKeyStatus();
+      } catch (error) {
+        console.error('Error saving Gemini API Key:', error);
+        showGeminiAlert('danger', error.message);
+      }
+    });
+
+    function showGeminiAlert(type, message) {
+      geminiAlertText.textContent = message;
+      geminiAlertMessage.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+      setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(geminiAlertMessage);
+        if (bsAlert) {
+          bsAlert.close();
+        }
+      }, 5000);
+    }
+
+    fetchGeminiApiKeyStatus();
+
+    async function loadSheets() {
+      // Simplificado: Recargar la página para que EJS renderice la tabla actualizada.
+      // Esto evita conflictos con la manipulación de DataTables vía JS.
+      window.location.reload();
+      // El código anterior que usaba fetch y dataTableInstance.rows.add() se elimina.
+    }
+    
+    async function saveSheet() {
+      try {
+        const form = document.getElementById('addSheetForm');
+        const sheetId = form.elements.sheetId.value;
+        const name = form.elements.name.value;
+        const description = form.elements.description.value;
+        const range = form.elements.range.value;
+        const isActive = form.elements.isActive.checked;
+        const isPropertyLogSheet = form.elements.is_property_log_sheet.checked;
+        
+        if (!sheetId || !name) {
+          showAlert('error', 'El ID de la hoja y el nombre son obligatorios');
+          return;
+        }
+        
+        const response = await fetch('/api/google-sheets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            sheetId,
+            name,
+            description,
+            range,
+            isActive,
+            is_property_log_sheet: isPropertyLogSheet
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          showAlert('error', result.error || 'Error al guardar la hoja');
+          return;
+        }
+        
+        $('#addSheetModal').modal('hide');
+        showAlert('success', 'Hoja guardada correctamente');
+        loadSheets();
+      } catch (error) {
+        console.error('Error:', error);
+        showAlert('error', 'Error al guardar la hoja: ' + error.message);
+      }
+    }
+    
+    async function updateSheet() {
+      try {
+        const id = document.getElementById('editId').value;
+        const form = document.getElementById('editSheetForm');
+        const sheetId = form.elements.editSheetId.value;
+        const name = form.elements.editName.value;
+        const description = form.elements.editDescription.value;
+        const range = form.elements.editRange.value;
+        const isActive = form.elements.editStatus.checked;
+        const isPropertyLogSheet = form.elements.editIsPropertyLogSheet.checked;
+        
+        // --- DEBUG --- 
+        console.log('Datos a enviar para actualizar (ID:', id, '):', { sheetId, name, description, range, isActive, is_property_log_sheet: isPropertyLogSheet });
+        // --- FIN DEBUG ---
+
+        if (!id || !sheetId || !name) {
+          showAlert('error', 'ID, nombre y ID de la hoja son obligatorios');
+          return;
+        }
+        
+        const response = await fetch(`/api/google-sheets/${id}`, { // URL corregida
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            sheetId,
+            name,
+            description,
+            range,
+            isActive,
+            is_property_log_sheet: isPropertyLogSheet
+          })
+        });
+        
+        const result = await response.json();
+        
+        // --- DEBUG --- 
+        console.log('Respuesta de la API al actualizar:', JSON.stringify(result, null, 2));
+        // --- FIN DEBUG ---
+
+        if (!response.ok) {
+            // Si la API devuelve error, intentar leer el mensaje
+            const errorMsg = result.message || result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Error al actualizar la hoja');
+            throw new Error(errorMsg);
+        }
+        
+        // Quitar el $ de jQuery si no se usa en otros lados y usar Bootstrap directamente
+        const editModalEl = document.getElementById('editSheetModal');
+        const modalInstance = bootstrap.Modal.getInstance(editModalEl);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+        
+        showAlert('success', result.message || 'Hoja actualizada correctamente');
+        loadSheets(); // Recarga la página
+      } catch (error) {
+        console.error('Error en updateSheet:', error);
+        showAlert('error', 'Error al actualizar la hoja: ' + error.message);
+      }
+    }
+    
+    async function deleteSheet() {
+      try {
+        const id = document.getElementById('deleteId').value;
+        
+        if (!id) {
+          showAlert('error', 'ID de hoja no válido');
+          return;
+        }
+        
+        const response = await fetch(`/api/google-sheets/${id}`, { // URL corregida
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          const errorMsg = result.message || result.error || (result.errors ? result.errors.map(e => e.msg).join(', ') : 'Error al eliminar la hoja');
+          throw new Error(errorMsg);
+        }
+        
+        // Quitar jQuery
+        const deleteModalEl = document.getElementById('deleteSheetModal');
+        const modalInstance = bootstrap.Modal.getInstance(deleteModalEl);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+
+        showAlert('success', result.message || 'Hoja eliminada correctamente');
+        loadSheets();
+      } catch (error) {
+        console.error('Error en deleteSheet:', error);
+        showAlert('error', 'Error al eliminar la hoja: ' + error.message);
+      }
+    }
+    
+    function setupActionButtons() {
+      document.querySelectorAll('.explore-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          window.location.href = `/admin/sheet-explorer/${id}`;
+        });
+      });
+      
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          populateEditModal(id);
+        });
+      });
+      
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          const name = this.getAttribute('data-name');
+          openDeleteModal(id, name);
+        });
+      });
+    }
+    
+    async function populateEditModal(id) {
+      try {
+        const response = await fetch(`/api/google-sheets/${id}`, { // URL corregida
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+           // Si la API devuelve error, intentar leer el mensaje
+           let errorMsg = 'Error al cargar datos de la hoja';
+           try {
+               const errorData = await response.json();
+               errorMsg = errorData.message || errorMsg;
+           } catch(e){ /* Ignorar si el cuerpo no es JSON */}
+           throw new Error(errorMsg);
+        }
+        
+        const sheet = await response.json(); // Asumiendo que la API devuelve directamente el objeto
+
+        // --- DEBUG --- 
+        console.log('Datos recibidos para editar:', JSON.stringify(sheet, null, 2));
+        console.log('Valor de is_property_log_sheet recibido:', sheet.is_property_log_sheet);
+        // --- FIN DEBUG ---
+        
+        document.getElementById('editId').value = sheet.id;
+        document.getElementById('editSheetId').value = sheet.sheet_id; // Corregido a snake_case si la API devuelve así
+        document.getElementById('editName').value = sheet.name;
+        document.getElementById('editDescription').value = sheet.description || '';
+        document.getElementById('editRange').value = sheet.range || 'A:Z';
+        document.getElementById('editStatus').checked = sheet.is_active;
+        document.getElementById('editIsPropertyLogSheet').checked = sheet.is_property_log_sheet;
+        
+        // --- DEBUG --- 
+        console.log('Checkbox isPropertyLogSheet checked state set to:', document.getElementById('editIsPropertyLogSheet').checked);
+        // --- FIN DEBUG ---
+
+        new bootstrap.Modal(document.getElementById('editSheetModal')).show();
+      } catch (error) {
+        console.error('Error en populateEditModal:', error);
+        showAlert('error', 'Error al cargar datos: ' + error.message);
+      }
+    }
+    
+    function openDeleteModal(id, name) {
+      document.getElementById('deleteId').value = id;
+      document.getElementById('deleteSheetName').textContent = name;
+      new bootstrap.Modal(document.getElementById('deleteSheetModal')).show();
+    }
+    
+    function showAlert(type, message) {
+      const alertEl = document.getElementById('alertMessage');
+      const alertText = document.getElementById('alertText');
+      
+      alertEl.classList.remove('d-none', 'alert-success', 'alert-danger');
+      alertEl.classList.add('show', type === 'success' ? 'alert-success' : 'alert-danger');
+      
+      alertText.textContent = message;
+      
+      setTimeout(() => {
+        alertEl.classList.remove('show');
+        setTimeout(() => {
+          alertEl.classList.add('d-none');
+        }, 300);
+      }, 5000);
+    }
+  });
+</script> 
